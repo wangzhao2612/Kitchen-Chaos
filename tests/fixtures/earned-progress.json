@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:5173",
+      "localStorage": [
+        {
+          "name": "kitchen-chaos-v1",
+          "value": "{\"version\":1,\"stars\":[3,3,3,3,3],\"scores\":[924,1258,1413,1155,1423],\"muted\":false,\"music\":0.55,\"effects\":0.75}"
+        }
+      ]
+    }
+  ]
+}

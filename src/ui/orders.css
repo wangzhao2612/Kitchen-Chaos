@@ -1,0 +1,6 @@
+/* The fullest bar is 90 seconds; it tracks the oldest outstanding guest per dish. */
+.order-patience{height:9px;border:1px solid #a7b5a0;border-radius:8px;background:#dce2ce;overflow:hidden;box-shadow:inset 0 1px 2px #57756820;margin-top:8px}
+.order-patience i{display:block;height:100%;width:100%;background:#4bae98;border-radius:6px;transition:width .1s linear,background-color .2s}
+.order-patience[data-mood="uneasy"] i{background:#e2af47}.order-patience[data-mood="angry"] i{background:#e87551}
+@media(max-width:700px){.order-patience{height:8px;margin-top:6px}}
+@media(prefers-reduced-motion:reduce){.order-patience i{transition:none}}

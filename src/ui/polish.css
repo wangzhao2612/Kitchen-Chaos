@@ -1,0 +1,45 @@
+/* A shared, toy-like finish for menus and the live kitchen HUD. */
+:root{--ink:#28545a;--cream:#fff9e8;--sun:#ffbf46;--coral:#ed7950;--mint:#4cb5a0;color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:4px solid #ffc64c;outline-offset:4px}
+.topbar{background:#fff8e7;border-bottom:3px solid #e9d1a8;color:var(--ink)}
+.brand-mark{background:#32978a;box-shadow:0 4px 0 #21685f;border:2px solid #fff2bf}
+.panel{border:3px solid #fffdf1;box-shadow:0 7px 0 #254e55,0 12px 35px #142e4540;background:#fff8e7}
+.overlay{background:#173e5380;backdrop-filter:blur(3px)}
+.panel h2,.level-copy h3,.recipe-card h3{color:#28545a;font-weight:900}
+.panel p,.hero p{color:#69735d}
+.button,.icon-button{border:2px solid #d6b780;border-radius:13px;background:linear-gradient(#fffdf1,#ffedc5);box-shadow:0 4px 0 #bca173;color:#385952;font-weight:900}
+.button.primary{background:linear-gradient(#fbaa45,#ee7940);border-color:#b95832;color:#fffef1;text-shadow:0 2px 0 #a94c2a;box-shadow:0 5px 0 #a84e30}
+.button.primary:hover{background:linear-gradient(#ffbb58,#fa8c49);box-shadow:0 6px 0 #a84e30}
+.button:active,.icon-button:active{transform:translateY(3px);box-shadow:0 1px 0 #9b814f}
+.hero{border:4px solid #fff5d2;border-radius:25px;background:linear-gradient(120deg,#fffaf0,#ffedc7)}
+.hero h1{font-family:'Arial Rounded MT Bold','Trebuchet MS','PingFang SC',sans-serif;font-weight:1000;letter-spacing:-5px;font-size:82px;line-height:.98;color:#268f8d;text-shadow:0 4px 0 #19585e,2px 0 #fffdf1,-2px 0 #fffdf1;transform:rotate(-3deg);transform-origin:left center}
+.hero h1 em{color:#f3943e;text-shadow:0 4px 0 #b35630,2px 0 #fffdf1,-2px 0 #fffdf1}.hero h1 em span{color:#ffca56;font-size:90px}
+.hero h2{color:#347c73;letter-spacing:7px}.hero .eyebrow{color:#72886b;letter-spacing:1.8px}
+.hero-tags span{background:#fff9e9;border:2px solid #ead7b1;color:#6e805d;border-radius:8px}
+.hero-art.ai-cover{border-left:4px solid #fff3cd}.cover-badge{background:#fff5d8ed;border:2px solid #fffcec;color:#417768}
+.level-card{border:3px solid #fff7db;box-shadow:0 5px 0 #406f65;border-radius:17px;background:#fff8e5}
+.level-card:hover{border-color:#ffc14b;transform:translateY(-3px)}
+.recipe-card,.notice{background:#f3edcf;border-color:#e1ce9e;border-radius:14px}
+.order-card{background:#fffbed;border:2px solid #fffefa;border-radius:9px 9px 12px 12px;box-shadow:0 4px 0 #43646b,0 7px 14px #183e4826}
+.order-card::before{background:#52b6a4;box-shadow:0 2px 0 #2e8078;width:34px;left:calc(50% - 17px);height:8px;border:1px solid #a5e6bc}
+.order-heading{border-bottom:2px dashed #e6d9b8;padding-bottom:3px}
+.order-quantity{color:#247e76;text-shadow:0 2px #e5ebce}.process-icons{background:#dcecdf;border:1px solid #b7d3bc}
+.order-time{background:#e2dbc4;height:7px;box-shadow:inset 0 1px 2px #907e5833}
+.order-card.urgent{border-color:#ef8752;box-shadow:0 4px 0 #ae5439}
+.play-timer{border:3px solid #fff2bc;border-radius:20px;background:linear-gradient(#368f96,#246570);box-shadow:0 5px 0 #184653,0 7px 15px #153a4526;color:#fff9dc}
+.play-timer strong{text-shadow:0 3px 0 #1c5663}.time-track{background:#184f5c}.time-track i{background:#ffcb55}
+.play-timer.urgent{background:linear-gradient(#ed9256,#c5573b)}.play-timer.urgent strong{color:#fff8d9;text-shadow:0 3px #8e3d31}
+.service-bar{background:linear-gradient(#338e91,#276776);border:2px solid #f5e8b6;box-shadow:0 4px 0 #184854;border-radius:16px}
+.score-panel strong{text-shadow:0 2px #174c5b}.targets .earned{color:#ffce59;text-shadow:0 2px #ac783b}
+.work-status{background:#285c63;border-top:3px solid #b4d5b8}.interaction,.held-panel,.dash-meter{background:#1c48524a;border:1px solid #8fc5b340;border-radius:11px}
+.keybar{background:#fff3d9;border-top:2px solid #e2c99b;color:#536d5b}kbd{background:#fffdf0;border-color:#d4b98d;box-shadow:0 1px 0 #b79b70}
+.result-stars{color:#ffbc3e;text-shadow:0 4px 0 #b77931}.result-score strong{color:#278b86}
+@media(max-width:700px){.hero h1{font-size:46px;letter-spacing:-2px}.hero h1 em span{font-size:52px}.hero-art.ai-cover{border-left-width:2px}.hero h2{letter-spacing:5px}.panel{border-width:2px}.order-card{box-shadow:0 3px 0 #43646b}.play-timer{border-width:2px}}
+@media(prefers-reduced-motion:reduce){.panel,.order-card.urgent{animation:none}.button,.toast{transition:none}}
+
+.dining-hint{margin:0;padding:12px 15px;border:1px solid #f5dfab99;border-radius:13px;background:#28564ee6;color:#fff2ce;font-size:17px;line-height:1.5;max-width:300px;box-shadow:0 3px 8px #143b3625}
+
+.waste-summary{padding:10px;background:#f3ecd6;border-radius:12px;text-align:left}.waste-summary h3{font-size:17px;margin:0}.waste-summary p{font-size:13px;margin:4px 0}.waste-summary>div{display:flex;flex-wrap:wrap;gap:5px}.waste-summary span{display:inline-flex;align-items:center;font-size:15px}.waste-summary img{width:25px;height:25px}
+.result-stars span{color:#bbc6b7;text-shadow:0 3px 0 #7a9187}.result-stars span.earned{color:#ffbc3e;text-shadow:0 4px 0 #b77931}
+
+.recipe-price{font-size:15px!important;font-weight:700;color:#376e65!important;margin:5px 0!important}.ingredient-prices{margin-top:14px;padding:14px;border-radius:12px;background:#f3edcf}.ingredient-prices h3{margin:0 0 8px;font-size:19px}.ingredient-prices>div{display:flex;flex-wrap:wrap;gap:8px}.ingredient-prices span{display:flex;gap:7px;align-items:center;background:#fff8e7;padding:5px 10px;border-radius:8px;font-size:17px}.ingredient-prices img{width:30px;height:30px}.ingredient-prices p{font-size:15px;margin:8px 0 0}.earnings-summary{display:flex;justify-content:space-between;gap:8px;margin:8px 0;padding:10px;border-radius:10px;background:#e7efe0;font-size:15px}.earnings-summary b{display:block;font-size:21px;color:#247e76}

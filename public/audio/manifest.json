@@ -1,0 +1,219 @@
+{
+  "composer": "Kitchen Chaos original score",
+  "renderer": "FluidSynth / GeneralUser GS by S. Christian Collins",
+  "version": "acoustic-v2",
+  "tracks": {
+    "menu": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "nylon guitar",
+        "piano",
+        "nylon guitar",
+        "upright bass",
+        "pizzicato strings",
+        "vibraphone",
+        "brush percussion"
+      ],
+      "peak": 0.36789050698280334,
+      "rms": 0.0550000139571971,
+      "file": "menu-acoustic-v2.ogg",
+      "fallback": "menu-acoustic-v2.mp3",
+      "seconds": 97.95918367346938,
+      "bpm": 98,
+      "bars": 40
+    },
+    "level1": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "piano",
+        "piano",
+        "nylon guitar",
+        "upright bass",
+        "pizzicato strings",
+        "vibraphone",
+        "brush percussion"
+      ],
+      "peak": 0.37694841623306274,
+      "rms": 0.05500001757674902,
+      "file": "level1-acoustic-v2.ogg",
+      "fallback": "level1-acoustic-v2.mp3",
+      "seconds": 92.30768707482993,
+      "bpm": 104,
+      "bars": 40
+    },
+    "level1-urgent": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "pizzicato strings",
+        "brush percussion"
+      ],
+      "peak": 0.18369977176189423,
+      "rms": 0.018606338935047925,
+      "file": "level1-urgent-acoustic-v2.ogg",
+      "fallback": "level1-urgent-acoustic-v2.mp3",
+      "seconds": 92.30768707482993,
+      "bpm": 104,
+      "bars": 40
+    },
+    "level2": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "steel-string guitar",
+        "piano",
+        "nylon guitar",
+        "upright bass",
+        "pizzicato strings",
+        "vibraphone",
+        "brush percussion"
+      ],
+      "peak": 0.38753777742385864,
+      "rms": 0.05499999926458839,
+      "file": "level2-acoustic-v2.ogg",
+      "fallback": "level2-acoustic-v2.mp3",
+      "seconds": 85.71428571428571,
+      "bpm": 112,
+      "bars": 40
+    },
+    "level2-urgent": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "pizzicato strings",
+        "brush percussion"
+      ],
+      "peak": 0.1977289468050003,
+      "rms": 0.019459025349057905,
+      "file": "level2-urgent-acoustic-v2.ogg",
+      "fallback": "level2-urgent-acoustic-v2.mp3",
+      "seconds": 85.71428571428571,
+      "bpm": 112,
+      "bars": 40
+    },
+    "level3": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "marimba",
+        "piano",
+        "nylon guitar",
+        "upright bass",
+        "pizzicato strings",
+        "vibraphone",
+        "brush percussion"
+      ],
+      "peak": 0.33977314829826355,
+      "rms": 0.05500000951560277,
+      "file": "level3-acoustic-v2.ogg",
+      "fallback": "level3-acoustic-v2.mp3",
+      "seconds": 81.3559410430839,
+      "bpm": 118,
+      "bars": 40
+    },
+    "level3-urgent": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "pizzicato strings",
+        "brush percussion"
+      ],
+      "peak": 0.19715750217437744,
+      "rms": 0.019755715140426667,
+      "file": "level3-urgent-acoustic-v2.ogg",
+      "fallback": "level3-urgent-acoustic-v2.mp3",
+      "seconds": 81.3559410430839,
+      "bpm": 118,
+      "bars": 40
+    },
+    "level4": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "accordion",
+        "piano",
+        "nylon guitar",
+        "upright bass",
+        "pizzicato strings",
+        "vibraphone",
+        "brush percussion"
+      ],
+      "peak": 0.29816964268684387,
+      "rms": 0.05499999496320658,
+      "file": "level4-acoustic-v2.ogg",
+      "fallback": "level4-acoustic-v2.mp3",
+      "seconds": 78.6885260770975,
+      "bpm": 122,
+      "bars": 40
+    },
+    "level4-urgent": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "pizzicato strings",
+        "brush percussion"
+      ],
+      "peak": 0.19134202599525452,
+      "rms": 0.020243215779157057,
+      "file": "level4-urgent-acoustic-v2.ogg",
+      "fallback": "level4-urgent-acoustic-v2.mp3",
+      "seconds": 78.6885260770975,
+      "bpm": 122,
+      "bars": 40
+    },
+    "level5": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "clarinet",
+        "piano",
+        "nylon guitar",
+        "upright bass",
+        "pizzicato strings",
+        "vibraphone",
+        "brush percussion"
+      ],
+      "peak": 0.3609161078929901,
+      "rms": 0.054999993756765876,
+      "file": "level5-acoustic-v2.ogg",
+      "fallback": "level5-acoustic-v2.mp3",
+      "seconds": 75.0,
+      "bpm": 128,
+      "bars": 40
+    },
+    "level5-urgent": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "pizzicato strings",
+        "brush percussion"
+      ],
+      "peak": 0.19041363894939423,
+      "rms": 0.02043291635398799,
+      "file": "level5-urgent-acoustic-v2.ogg",
+      "fallback": "level5-urgent-acoustic-v2.mp3",
+      "seconds": 75.0,
+      "bpm": 128,
+      "bars": 40
+    },
+    "success": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "piano",
+        "marimba"
+      ],
+      "peak": 0.356599897146225,
+      "rms": 0.05500000583689213,
+      "file": "success-acoustic-v2.ogg",
+      "fallback": "success-acoustic-v2.mp3",
+      "seconds": 4.0,
+      "bpm": 120,
+      "bars": 2
+    },
+    "failure": {
+      "arrangement": "acoustic-v2",
+      "instruments": [
+        "piano",
+        "marimba"
+      ],
+      "peak": 0.31531667709350586,
+      "rms": 0.055000002243882316,
+      "file": "failure-acoustic-v2.ogg",
+      "fallback": "failure-acoustic-v2.mp3",
+      "seconds": 4.0,
+      "bpm": 120,
+      "bars": 2
+    }
+  }
+}
