@@ -13,6 +13,10 @@ export const FIRE_SECONDS = 8;
 export const PERFECT_SECONDS = 4;
 /** Bonus points per perfectly plated component, paid when the dish is delivered. */
 export const PERFECT_BONUS = 20;
+/** A customer served with at least this share of their patience left leaves a tip. */
+export const TIP_PATIENCE_RATIO = 2 / 3;
+/** Tip as a share of the dish's sale price (at least 1 coin). Tracked apart from revenue and profit. */
+export const TIP_RATE = 0.25;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const length = (x: number, y: number) => Math.hypot(x, y);
 
@@ -27,6 +31,7 @@ export class Simulation {
   bestCombo = 0;
   served = 0;
   revenue = 0;
+  tips = 0;
   private soldIngredientCost = 0;
   failed = 0;
   cleanPlates: number;
@@ -116,7 +121,8 @@ export class Simulation {
       const perfectBonus=(delivery.plate.perfect??0)*PERFECT_BONUS;
       const points=dish.score+Math.floor(40*customer.patience/PATIENCE_SECONDS)+Math.min(50,(this.combo-1)*10)+perfectBonus;
       const sale=recipeEconomy(dish);this.revenue+=sale.price;this.soldIngredientCost+=sale.cost;
-      this.score+=points;this.served++;this.emit('serve',delivery.source.x,delivery.source.y,`${dish.name} +${points}${perfectBonus?` · 完美火候 +${perfectBonus}`:''}`,points);
+      const tip=customer.patience/PATIENCE_SECONDS>=TIP_PATIENCE_RATIO?Math.max(1,Math.round(sale.price*TIP_RATE)):0;this.tips+=tip;
+      this.score+=points;this.served++;this.emit('serve',delivery.source.x,delivery.source.y,`${dish.name} +${points}${perfectBonus?` · 完美火候 +${perfectBonus}`:''}${tip?` · 满意小费 +${tip}币`:''}`,points);
     }
     for(const order of this.orders){
       const waiting=this.restaurant.customers.filter(c=>c.orderId===order.id&&c.state==='WAITING');
@@ -372,7 +378,7 @@ export class Simulation {
     const parts=[...this.waste,...unused],kinds=[...new Set(parts.map(p=>p.kind))];
     const wasteBreakdown=kinds.map(kind=>{const quantity=parts.filter(p=>p.kind===kind).length;return {kind,quantity,cost:quantity*INGREDIENT_COST[kind]};});
     const wasteCost=wasteBreakdown.reduce((sum,p)=>sum+p.cost,0),ingredientCost=this.soldIngredientCost+wasteCost;
-    return {revenue:this.revenue,ingredientCost,profit:this.revenue-ingredientCost,level:this.level.id,score:this.score,stars:this.stars,served:this.served,failed:this.failed,bestCombo:this.bestCombo,wasted:parts.length,wasteCost,wasteBreakdown};
+    return {revenue:this.revenue,tips:this.tips,ingredientCost,profit:this.revenue-ingredientCost,level:this.level.id,score:this.score,stars:this.stars,served:this.served,failed:this.failed,bestCombo:this.bestCombo,wasted:parts.length,wasteCost,wasteBreakdown};
   }
   plateCount(): number { return this.cleanPlates + this.dirtyQueue.length + this.returns.length + (this.level.washing ? this.restaurant.platesInTransit : 0) + (this.player.held?.type === 'plate' ? 1 : 0) + this.stations.filter(s => s.item?.type === 'plate').length; }
   prompt(s: Station | null = this.target): string {
