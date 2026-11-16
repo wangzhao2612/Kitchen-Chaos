@@ -6,7 +6,8 @@ export type IngredientKind = 'tomato' | 'lettuce' | 'onion' | 'carrot' | 'potato
 export type IngredientState = 'RAW' | 'CHOPPED' | 'COOKING' | 'COOKED' | 'BURNT';
 export interface Component { kind: IngredientKind; state: IngredientState }
 export interface Food { type: 'food'; components: Component[]; progress: number }
-export interface Plate { type: 'plate'; components: Component[]; dirty: boolean; progress: number }
+/** `perfect` counts cooked components plated straight from the stove right after they finished. */
+export interface Plate { type: 'plate'; components: Component[]; dirty: boolean; progress: number; perfect?: number }
 export interface Extinguisher { type: 'extinguisher' }
 export type Item = Food | Plate | Extinguisher;
 export type StoveState = 'IDLE' | 'COOKING' | 'READY' | 'BURNING' | 'BURNT' | 'ON_FIRE';

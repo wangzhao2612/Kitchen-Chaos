@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Simulation } from '../src/game/Simulation';
+import { Simulation, PERFECT_BONUS, PERFECT_SECONDS } from '../src/game/Simulation';
 import { LEVELS } from '../src/levels/data';
 import { canPlate, cookingTime, matchRecipe, RECIPES } from '../src/cooking/recipes';
 import { food, plate, TILE, WASH_SECONDS, DIRTY_RETURN_SECONDS } from '../src/game/types';
@@ -145,4 +145,37 @@ it('does not lose ingredients or accept wrong, processed, combined or plated foo
   for(const item of [food('tomato','CHOPPED'),food('tomato','COOKING'),food('tomato','COOKED'),food('tomato','BURNT'),combined,partial,plated,plate(),{type:'extinguisher'} as const]){
     sim.player.held=item;sim.interact(tomato);expect(sim.player.held).toBe(item);expect(sim.prompt(tomato)).not.toContain('J 放回原材料');
   }
+});
+
+describe('perfect heat bonus', () => {
+  // Both runs share one timeline (cook, wait, serve at the same moment); only the plating moment differs.
+  function cheeseburgerRun(platingDelay: number, wait: number): { sim: Simulation; dish: ReturnType<typeof plate> } {
+    const sim = new Simulation({ ...LEVELS[1], recipes: ['cheeseburger'] }), stove = station(sim, 'stove');
+    tick(sim, 2.1);
+    sim.player.held = food('beef'); sim.interact(stove); tick(sim, 6.1 + platingDelay);
+    sim.player.held = plate(); sim.interact(stove);
+    const dish = sim.player.held as ReturnType<typeof plate>;
+    dish.components.push({ kind: 'bread', state: 'RAW' }, { kind: 'cheese', state: 'RAW' });
+    expect(matchRecipe(dish.components)?.id).toBe('cheeseburger');
+    tick(sim, wait); sim.interact(station(sim, 'serve')); tick(sim, 3.5);
+    expect(sim.served).toBe(1);
+    return { sim, dish };
+  }
+  it('pays a bonus only when freshly cooked food is plated straight from the stove', () => {
+    const perfect = cheeseburgerRun(0, 6), late = cheeseburgerRun(6, 0);
+    expect(PERFECT_SECONDS).toBeLessThan(6);
+    expect(perfect.dish.perfect).toBe(1); expect(late.dish.perfect ?? 0).toBe(0);
+    expect(perfect.sim.score - late.sim.score).toBe(PERFECT_BONUS);
+  });
+  it('clears the mark when a plate is emptied and never rewards burning food', () => {
+    const sim = new Simulation(LEVELS[1]), stove = station(sim, 'stove');
+    sim.player.held = food('beef'); sim.interact(stove); tick(sim, 6.1);
+    expect(sim.prompt(stove)).toBe('烹饪完成 · J 装盘 / 取出');
+    sim.player.held = plate(); expect(sim.prompt(stove)).toContain('完美火候'); sim.interact(stove);
+    const held = sim.player.held as ReturnType<typeof plate>; expect(held.perfect).toBe(1);
+    sim.interact(station(sim, 'trash')); expect(held.components).toHaveLength(0); expect(held.perfect).toBe(0);
+    sim.player.held = food('beef'); sim.interact(stove); tick(sim, 6 + 12.5);
+    expect(stove.stoveState).toBe('BURNING'); sim.player.held = plate(); expect(sim.prompt(stove)).not.toContain('完美火候');
+    sim.interact(stove); expect((sim.player.held as ReturnType<typeof plate>).perfect ?? 0).toBe(0);
+  });
 });
