@@ -113,3 +113,14 @@ it('front chopping uses the anatomical right hand, moving its grip and wrist ang
   s.player.workTime=.1;const a=characterPose(s.player,target);s.player.workTime=.16;const b=characterPose(s.player,target);
   expect(a.rightHand.x).toBeLessThan(a.leftHand.x);expect(a.rightHand.y).not.toBe(b.rightHand.y);expect(a.rightHand.x).not.toBe(b.rightHand.x);
 });
+
+it('carries plates and food below the chin line so the face stays visible',()=>{
+  const sim=new Simulation(LEVELS[0]);
+  for(const held of [plate(),food('tomato')]) {
+    sim.player.held=held;
+    for(const facing of [{x:0,y:1},{x:-1,y:0},{x:1,y:0}]) {
+      sim.player.facing=facing;sim.player.yaw=Math.atan2(facing.x,-facing.y);
+      expect(characterPose(sim.player).item!.y).toBeGreaterThanOrEqual(-14);
+    }
+  }
+});
