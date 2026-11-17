@@ -9,6 +9,14 @@ export const ROUND_SECONDS = 300;
 export const READY_SECONDS = 12;
 export const WARNING_SECONDS = 5;
 export const FIRE_SECONDS = 8;
+/** Plating within this many seconds of a dish finishing counts as perfect heat. */
+export const PERFECT_SECONDS = 4;
+/** Bonus points per perfectly plated component, paid when the dish is delivered. */
+export const PERFECT_BONUS = 20;
+/** A customer served with at least this share of their patience left leaves a tip. */
+export const TIP_PATIENCE_RATIO = 2 / 3;
+/** Tip as a share of the dish's sale price (at least 1 coin). Tracked apart from revenue and profit. */
+export const TIP_RATE = 0.25;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const length = (x: number, y: number) => Math.hypot(x, y);
 
@@ -23,6 +31,7 @@ export class Simulation {
   bestCombo = 0;
   served = 0;
   revenue = 0;
+  tips = 0;
   private soldIngredientCost = 0;
   failed = 0;
   cleanPlates: number;
@@ -109,9 +118,11 @@ export class Simulation {
       const dish=matchRecipe(delivery.plate.components),customer=this.restaurant.customers.find(c=>c.id===delivery.customerId);
       if(!dish||!customer)continue;
       this.combo++;this.bestCombo=Math.max(this.bestCombo,this.combo);
-      const points=dish.score+Math.floor(40*customer.patience/PATIENCE_SECONDS)+Math.min(50,(this.combo-1)*10);
+      const perfectBonus=(delivery.plate.perfect??0)*PERFECT_BONUS;
+      const points=dish.score+Math.floor(40*customer.patience/PATIENCE_SECONDS)+Math.min(50,(this.combo-1)*10)+perfectBonus;
       const sale=recipeEconomy(dish);this.revenue+=sale.price;this.soldIngredientCost+=sale.cost;
-      this.score+=points;this.served++;this.emit('serve',delivery.source.x,delivery.source.y,`${dish.name} +${points}`,points);
+      const tip=customer.patience/PATIENCE_SECONDS>=TIP_PATIENCE_RATIO?Math.max(1,Math.round(sale.price*TIP_RATE)):0;this.tips+=tip;
+      this.score+=points;this.served++;this.emit('serve',delivery.source.x,delivery.source.y,`${dish.name} +${points}${perfectBonus?` · 完美火候 +${perfectBonus}`:''}${tip?` · 满意小费 +${tip}币`:''}`,points);
     }
     for(const order of this.orders){
       const waiting=this.restaurant.customers.filter(c=>c.orderId===order.id&&c.state==='WAITING');
@@ -228,7 +239,7 @@ export class Simulation {
     if (s.kind === 'serve') { this.serve(s); return; }
     if (s.kind === 'trash') {
       if (held?.type === 'food') { this.recordWaste(held.components); p.held = null; this.emit('place', s.x, s.y, '已丢弃'); }
-      else if (held?.type === 'plate' && held.components.length) { this.recordWaste(held.components); held.components = []; this.emit('place', s.x, s.y, '清空盘子'); }
+      else if (held?.type === 'plate' && held.components.length) { this.recordWaste(held.components); held.components = []; held.perfect = 0; this.emit('place', s.x, s.y, '清空盘子'); }
       else this.hint('携带食材或有食物的盘子，再按 J 丢弃', s);
       return;
     }
@@ -264,7 +275,11 @@ export class Simulation {
     if (s.stoveState === 'ON_FIRE') { this.hint('炉灶起火！拿灭火器并按住 Space', s); return; }
     if (!held && s.item && s.stoveState !== 'COOKING') { this.pickup(s); this.resetStove(s); return; }
     if (held?.type === 'plate' && !held.dirty && s.item?.type === 'food' && ['READY', 'BURNING'].includes(s.stoveState)) {
-      if (this.addToPlate(held, s.item.components, s)) { s.item = null; this.resetStove(s); this.emit('place', s.x, s.y, '热腾腾，已装盘'); } return;
+      const perfect = s.stoveState === 'READY' && s.elapsed <= PERFECT_SECONDS;
+      if (this.addToPlate(held, s.item.components, s)) {
+        if (perfect) held.perfect = (held.perfect ?? 0) + 1;
+        s.item = null; this.resetStove(s); this.emit('place', s.x, s.y, perfect ? `完美火候！送达后 +${PERFECT_BONUS}` : '热腾腾，已装盘');
+      } return;
     }
     if (s.stoveState === 'COOKING') { this.hint('正在烹饪，请留意进度条', s); return; }
     if (held?.type === 'food' && s.stoveState === 'IDLE') {
@@ -363,7 +378,7 @@ export class Simulation {
     const parts=[...this.waste,...unused],kinds=[...new Set(parts.map(p=>p.kind))];
     const wasteBreakdown=kinds.map(kind=>{const quantity=parts.filter(p=>p.kind===kind).length;return {kind,quantity,cost:quantity*INGREDIENT_COST[kind]};});
     const wasteCost=wasteBreakdown.reduce((sum,p)=>sum+p.cost,0),ingredientCost=this.soldIngredientCost+wasteCost;
-    return {revenue:this.revenue,ingredientCost,profit:this.revenue-ingredientCost,level:this.level.id,score:this.score,stars:this.stars,served:this.served,failed:this.failed,bestCombo:this.bestCombo,wasted:parts.length,wasteCost,wasteBreakdown};
+    return {revenue:this.revenue,tips:this.tips,ingredientCost,profit:this.revenue-ingredientCost,level:this.level.id,score:this.score,stars:this.stars,served:this.served,failed:this.failed,bestCombo:this.bestCombo,wasted:parts.length,wasteCost,wasteBreakdown};
   }
   plateCount(): number { return this.cleanPlates + this.dirtyQueue.length + this.returns.length + (this.level.washing ? this.restaurant.platesInTransit : 0) + (this.player.held?.type === 'plate' ? 1 : 0) + this.stations.filter(s => s.item?.type === 'plate').length; }
   prompt(s: Station | null = this.target): string {
@@ -380,6 +395,7 @@ export class Simulation {
     if (s.kind === 'stove') {
       if (s.stoveState === 'ON_FIRE') return held?.type === 'extinguisher' ? '按住 Space 灭火' : '起火了！拿灭火器';
       if (s.stoveState === 'COOKING') return '正在烹饪，去准备其他食材吧';
+      if (s.stoveState === 'READY' && s.elapsed <= PERFECT_SECONDS && held?.type === 'plate' && !held.dirty) return `完美火候！现在 J 装盘 +${PERFECT_BONUS}`;
       if (['READY', 'BURNING'].includes(s.stoveState)) return '烹饪完成 · J 装盘 / 取出';
       if (s.stoveState === 'BURNT') return '烧焦了 · 空手 J 取出，再丢弃';
       return s.item ? '番茄汤 · J 加入另一种切好的食材' : '炉灶 · J 放入食材';

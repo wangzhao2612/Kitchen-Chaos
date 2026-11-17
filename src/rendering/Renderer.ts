@@ -7,11 +7,12 @@ import { choppingToolPose } from './ChoppingPose';
 import { drawRestaurant } from './RestaurantArt';
 import { dishIcon, ellipse, ingredientIcon, itemIcon, rounded } from './art';
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string; size: number };
-type Floating = { x: number; y: number; text: string; life: number; good: boolean };
+type Floating = { x: number; y: number; text: string; life: number; age: number; good: boolean };
 export class Renderer {
   readonly context: CanvasRenderingContext2D;
   private particles: Particle[] = [];
   private floating: Floating[] = [];
+  private shake = 0;
   private clock = 0;
   readonly width = 1280;
   height = 820;
@@ -30,13 +31,15 @@ export class Renderer {
   project(x: number, y: number): { x: number; y: number } { return { x: 80 + x, y: 95 + y * 0.78 }; }
   event(event: GameEvent): void {
     const pos = this.project(event.x, event.y);
-    if (event.text && event.kind !== 'hint') this.floating.push({ ...pos, text: event.text, life: 1.8, good: !['fire', 'fail'].includes(event.kind) });
+    if (event.kind === 'serve') this.shake = .22; else if (event.kind === 'fail') this.shake = Math.max(this.shake, .3);
+    if (event.text && event.kind !== 'hint') this.floating.push({ ...pos, text: event.text, life: 1.8, age: 0, good: !['fire', 'fail'].includes(event.kind) });
     const color = event.kind === 'serve' ? '#f6d379' : event.kind === 'wash' || event.kind === 'extinguish' ? '#c8eced' : '#fff0c5';
-    const count = event.kind === 'serve' ? 22 : event.kind === 'extinguish' ? 2 : ['pickup', 'place', 'chop', 'wash', 'dash'].includes(event.kind) ? 4 : 0;
-    for (let i = 0; i < count; i++) { const life = 0.4 + Math.random() * 0.5; this.particles.push({ x: pos.x, y: pos.y - 20, vx: (Math.random() - 0.5) * 110, vy: -35 - Math.random() * 80, life, max: life, color, size: 2 + Math.random() * 3 }); }
+    const colors = event.kind === 'serve' ? ['#f6d379', '#ff9f7a', '#fff6c8', '#9be0b0'] : event.kind === 'ready' ? ['#fff6c8', '#ffd479'] : [color];
+    const count = event.kind === 'serve' ? 30 : event.kind === 'ready' ? 8 : event.kind === 'extinguish' ? 2 : ['pickup', 'place', 'chop', 'wash', 'dash'].includes(event.kind) ? 4 : 0;
+    for (let i = 0; i < count; i++) { const life = 0.4 + Math.random() * 0.5; const burst = event.kind === 'serve' ? 1.5 : 1; this.particles.push({ x: pos.x, y: pos.y - 20, vx: (Math.random() - 0.5) * 110 * burst, vy: (-35 - Math.random() * 80) * burst, life, max: life, color: colors[i % colors.length], size: 2 + Math.random() * 3 }); }
     if (this.particles.length > 220) this.particles.splice(0, this.particles.length - 220);
   }
-  clearEffects(): void { this.particles = []; this.floating = []; this.camera.reset(); }
+  clearEffects(): void { this.shake = 0; this.particles = []; this.floating = []; this.camera.reset(); }
   draw(sim: Simulation, dt: number, active: boolean, inKitchen = false, insets = { top: 72, bottom: 90 }): void {
     const c = this.context;
     if (active) this.clock += dt;
@@ -51,7 +54,9 @@ export class Renderer {
       const pixelScale = Math.max(0.9, Math.min(1.65, Math.min(cssWidth / 960, cssHeight / 560) * 1.7));
       this.camera.follow(sim.player, { width: this.width, height: this.height, zoom: pixelScale / scale, top: insets.top / scale, bottom: insets.bottom / scale }, dt, active);
       this.backdrop(theme.outside);
-      c.translate(this.camera.x, this.camera.y); c.scale(this.camera.zoom, this.camera.zoom);
+      if (active) this.shake = Math.max(0, this.shake - dt);
+      const amp = this.shake * 9;
+      c.translate(this.camera.x + Math.sin(t * 90) * amp, this.camera.y + Math.cos(t * 77) * amp * .7); c.scale(this.camera.zoom, this.camera.zoom);
     }
     this.outside(sim, !inKitchen);
     const roomWidth=sim.level.cols*TILE,roomHeight=sim.level.rows*TILE*.78;
@@ -87,7 +92,7 @@ export class Renderer {
     for (const s of sim.stations) this.status(s, sim, t);
     for (const p of this.particles) { if (active) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 80 * dt; } c.globalAlpha = Math.max(0, p.life / p.max); ellipse(c, p.x, p.y, p.size, p.size * 0.7, p.color); }
     c.globalAlpha = 1; this.particles = this.particles.filter(p => p.life > 0);
-    for (const f of this.floating) { if (active) { f.life -= dt; f.y -= dt * 25; } c.globalAlpha = Math.min(1, f.life * 2); c.font = '800 24px "Noto Sans SC", sans-serif'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = '#294440'; c.strokeText(f.text, f.x, f.y - 44); c.fillStyle = f.good ? '#ffecad' : '#ffd0b2'; c.fillText(f.text, f.x, f.y - 44); }
+    for (const f of this.floating) { if (active) { f.life -= dt; f.age += dt; f.y -= dt * 25; } const pop = 1 + Math.max(0, .3 - f.age) * 2.2; c.globalAlpha = Math.min(1, f.life * 2); c.save(); c.translate(f.x, f.y - 44); c.scale(pop, pop); c.font = '800 24px "Noto Sans SC", sans-serif'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = '#294440'; c.strokeText(f.text, 0, 0); c.fillStyle = f.good ? '#ffecad' : '#ffd0b2'; c.fillText(f.text, 0, 0); c.restore(); }
     c.globalAlpha = 1; this.floating = this.floating.filter(f => f.life > 0);
     if (sim.level.dynamic) {
       const seconds = Math.ceil(12 - sim.elapsed % 12);

@@ -11,3 +11,4 @@
 @media(max-height:650px) and (min-width:601px){.results .waste-summary>div{grid-template-columns:repeat(3,minmax(0,1fr))}.results .waste-summary span{font-size:15px}.results .waste-summary img{width:25px;height:25px}}
 @media(max-height:650px) and (min-width:601px){.panel.results{gap:10px}}
 @media(max-width:600px){.panel.results{padding:12px;gap:8px}.results-header .eyebrow{display:none}.results-performance{gap:8px}.results .result-score{padding:8px}.results .result-score strong{font-size:32px}.results .result-score small,.results .result-score>span{font-size:14px}.results .earnings-summary{padding:8px;margin-bottom:8px}.results .waste-summary{padding:8px}.results .waste-summary p{display:none}.results .waste-summary>div{margin-top:8px}.results .stack-buttons{display:flex;gap:6px;padding-top:8px}.results .button{font-size:16px;padding:8px;white-space:nowrap}}
+.results .tips-summary{margin:-4px 0 12px;font-size:15px;line-height:1.4;text-align:center;color:#247e76}

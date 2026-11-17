@@ -95,12 +95,12 @@ export class AudioManager {
     const throttle = kind === 'sizzle' ? 0.5 : kind === 'extinguish' ? 0.12 : kind === 'step' ? 0.2 : kind === 'wash' ? 0.12 : 0.06;
     if (now - (this.lastEffect.get(kind) ?? -10) < throttle) return;
     this.lastEffect.set(kind, now);
-    if (['wash','extinguish','sizzle'].includes(kind)) {
-      const duration = kind === 'sizzle' ? 0.55 : 0.2;
+    if (['wash','extinguish','sizzle','chop'].includes(kind)) {
+      const duration = kind === 'sizzle' ? 0.55 : kind === 'chop' ? 0.045 : 0.2;
       const buffer=ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate), samples=buffer.getChannelData(0);
       for(let i=0;i<samples.length;i++) samples[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/samples.length);
       const source=ctx.createBufferSource(), filter=ctx.createBiquadFilter(), gain=ctx.createGain(); source.buffer=buffer;
-      filter.type='bandpass'; filter.frequency.value=kind==='sizzle'?1700:2500; filter.Q.value=.5; gain.gain.value=kind==='sizzle'?.035:.08;
+      filter.type='bandpass'; filter.frequency.value=kind==='sizzle'?1700:kind==='chop'?3400:2500; filter.Q.value=kind==='chop'?1.2:.5; gain.gain.value=kind==='sizzle'?.035:kind==='chop'?.12:.08;
       source.connect(filter); filter.connect(gain); gain.connect(this.effectsBus); source.start(); source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
     }
     const notes: Partial<Record<EventKind | 'step' | 'sizzle', number[]>> = { pickup: [660, 880], place: [430, 300], chop: [190], wash: [580], ready: [660, 880, 1100], serve: [523, 659, 784, 1047], fail: [260, 210, 170], fire: [740, 540, 740, 540], dash: [220, 420], finish: [523, 659, 784, 1047, 1319], extinguish: [420], step: [110], hint: [330] };

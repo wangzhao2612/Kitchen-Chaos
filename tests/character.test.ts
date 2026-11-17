@@ -113,3 +113,25 @@ it('front chopping uses the anatomical right hand, moving its grip and wrist ang
   s.player.workTime=.1;const a=characterPose(s.player,target);s.player.workTime=.16;const b=characterPose(s.player,target);
   expect(a.rightHand.x).toBeLessThan(a.leftHand.x);expect(a.rightHand.y).not.toBe(b.rightHand.y);expect(a.rightHand.x).not.toBe(b.rightHand.x);
 });
+
+it('carries plates and food below the chin line so the face stays visible',()=>{
+  const sim=new Simulation(LEVELS[0]);
+  for(const held of [plate(),food('tomato')]) {
+    sim.player.held=held;
+    for(const facing of [{x:0,y:1},{x:-1,y:0},{x:1,y:0}]) {
+      sim.player.facing=facing;sim.player.yaw=Math.atan2(facing.x,-facing.y);
+      expect(characterPose(sim.player).item!.y).toBeGreaterThanOrEqual(-14);
+    }
+  }
+});
+
+it('walks with a lively gait: visible stride, bob and arms swinging opposite to the legs',()=>{
+  const sim=new Simulation(LEVELS[0]),p=sim.player;
+  p.facing={x:0,y:1};p.yaw=0;p.vy=210;
+  p.walk=0;expect(characterPose(p).bob).toBeLessThan(-2);
+  p.walk=Math.PI/4;
+  const pose=characterPose(p);
+  expect(Math.abs(pose.stride)).toBeGreaterThan(4);
+  // Hands swing opposite to the feet.
+  expect((pose.leftHand.y-pose.rightHand.y)*(pose.leftFoot.y-pose.rightFoot.y)).toBeLessThan(0);
+});
