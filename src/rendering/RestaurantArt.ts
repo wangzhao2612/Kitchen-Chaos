@@ -79,19 +79,31 @@ export function drawRestaurant(c: CanvasRenderingContext2D, sim: Simulation): vo
     const f = coming ? Math.min(1, Math.max(0, guest.age / 1.25)) : leaving ? Math.min(1, guest.age / .7) : 1;
     const x = coming ? -39 + 80 * f : leaving ? 41 - 80 * f : 41;
     const y = coming ? l.bottom + 12 + (seatedY - l.bottom - 12) * f : leaving ? seatedY + (l.bottom + 12 - seatedY) * f : seatedY;
-    const walking = coming || leaving, bob = walking ? Math.sin(t * 15 + guest.id) * 1.4 : guest.state === 'EATING' ? Math.sin(guest.age * 3.5) * .8 : 0;
+    const walking = coming || leaving, step = Math.sin(t * 15 + guest.id), waiting = ['CHOOSING', 'QUEUED', 'WAITING'].includes(guest.state);
+    const bob = walking ? -Math.abs(step) * 2.6 : guest.state === 'EATING' ? Math.sin(guest.age * 3.5) * .8 : Math.sin(t * 2.2 + guest.id) * .7;
+    const sway = walking ? step * .06 : waiting ? Math.sin(t * 1.6 + guest.id * 2) * .03 : 0, squash = walking ? Math.cos(t * 30 + guest.id * 2) * .04 : 0;
     c.save(); c.translate(x, y + bob);
     const shirt = ['#dd8660', '#8cb9c3', '#b39bc5', '#e5c365', '#629f89'][guest.id % 5], skin = ['#e6b889', '#ba825b', '#f1cba5'][guest.id % 3];
-    ellipse(c, 0, 9, 15, 6, '#21392a44');
-    for (const sign of [-1, 1]) { const stride = walking ? Math.sin(t * 15 + guest.id) * sign * 3 : 0; ellipse(c, sign * 6 + stride, 7, 6, 3.5, '#493e37'); }
-    ellipse(c, 0, -2, 13, 13, shirt, '#557468');
-    const bite=guest.state==='EATING'?(1+Math.sin(guest.age*3))/2:1,handX=8+17*bite,handY=-15+8*bite;
-    c.beginPath();c.moveTo(8,-10);c.lineTo(handX,handY);c.lineWidth=6;c.strokeStyle=shirt;c.lineCap='round';c.stroke();ellipse(c,handX,handY,4,3,skin);
-    ellipse(c, 1, -18, 11, 11, skin, '#8d674d');
-    ellipse(c, -1, -25, 11, 5.5, guest.id % 3 === 0 ? '#8e6640' : '#4b3b32');
-    ellipse(c, -7, -20, 5, 8, guest.id % 3 === 0 ? '#8e6640' : '#4b3b32');
-    ellipse(c, 10, -17, 4, 3, skin); ellipse(c, 7, -21, 1.4, 2, '#3b3632'); ellipse(c, 8, -13, 2.5, 1, guest.unhappy ? '#763c33' : '#a7664c');
-    if (guest.id % 4 === 0) { rounded(c, 3, -25, 8, 7, 2, '#ffffff22', '#394e4b'); }
+    const hair = guest.id % 3 === 0 ? '#8e6640' : guest.id % 3 === 1 ? '#4b3b32' : '#6d4a3a';
+    ellipse(c, 0, 9 - bob, 15, 6, '#21392a44');
+    for (const sign of [-1, 1]) { const stride = walking ? step * sign * 4 : 0; ellipse(c, sign * 6 + stride, 7 - bob * .5 - (walking ? Math.max(0, step * sign) * 2 : 0), 6.2, 3.8, '#493e37'); }
+    c.save(); c.rotate(sway); c.scale(1 + squash, 1 - squash);
+    ellipse(c, 0, -2, 13.5, 13, shirt, '#557468'); ellipse(c, -4, -6, 5, 4, '#ffffff33');
+    const bite=guest.state==='EATING'?(1+Math.sin(guest.age*3))/2:1,handX=8+17*bite,handY=-15+8*bite+(walking?step*2:0);
+    c.beginPath();c.moveTo(8,-10);c.lineTo(handX,handY);c.lineWidth=6;c.strokeStyle=shirt;c.lineCap='round';c.stroke();ellipse(c,handX,handY,4.2,3.4,skin);
+    // Chibi head: bigger and rounder than the body, with hair, a shiny eye, blush and a mood-driven mouth.
+    const hy = -19 + (walking ? step * .8 : 0);
+    ellipse(c, 1, hy, 12.5, 12, skin, '#8d674d');
+    ellipse(c, -1, hy - 7.5, 12, 6, hair); ellipse(c, -8, hy - 2, 5, 9, hair); ellipse(c, 4, hy - 12, 3.5, 3, hair);
+    ellipse(c, 11, hy + 1, 4, 3.2, skin);
+    const blink = Math.sin(t * .9 + guest.id * 3) > .985 ? .25 : 1;
+    ellipse(c, 7, hy - 3, 2.1, 2.9 * blink, '#2e2a28'); if (blink === 1) ellipse(c, 7.6, hy - 4.2, .8, .8, '#fff');
+    ellipse(c, 8, hy + 3, 3, 1.8, '#f08a7a66');
+    if (guest.unhappy) { c.beginPath(); c.arc(10, hy + 6.5, 2, Math.PI * 1.1, Math.PI * 1.9); c.strokeStyle = '#763c33'; c.lineWidth = 1.2; c.stroke(); }
+    else if (guest.state === 'EATING') ellipse(c, 10, hy + 6, 1.6, 1.3 + bite * 1.4, '#a7664c');
+    else { c.beginPath(); c.arc(10, hy + 4.2, 2.1, Math.PI * .1, Math.PI * .9); c.strokeStyle = '#a7664c'; c.lineWidth = 1.2; c.stroke(); }
+    if (guest.id % 4 === 0) { rounded(c, 3, hy - 4, 8, 7, 2, '#ffffff22', '#394e4b'); }
+    c.restore();
     c.restore();
     if (['CHOOSING', 'QUEUED', 'WAITING'].includes(guest.state)) {
       rounded(c, x - 33, y - 48, 29, 24, 6, '#fff8da', '#d4ac73');
