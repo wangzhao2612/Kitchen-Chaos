@@ -65,34 +65,40 @@ export class CharacterArt {
       const ankleY=foot.y-foot.lift-2;
       limb(c,foot.x*.55,-10,foot.x*.78,(ankleY-10)/2,foot.x,ankleY,4.9,4.1,TROUSERS,TROUSERS_EDGE);
       c.save();c.translate(foot.x+pose.direction.x*2,foot.y-foot.lift);c.rotate(Math.atan2(pose.direction.y*.58,pose.direction.x));
-      const length=8*Math.hypot(pose.direction.x,pose.direction.y*.58);ellipse(c,0,0,length,5,'#7a4f35','#4a3426');ellipse(c,-1,-1.2,length*.6,2,'#c08f62');c.restore();
+      const length=9*Math.hypot(pose.direction.x,pose.direction.y*.58);ellipse(c,0,0,length,5.6,'#7a4f35','#4a3426');ellipse(c,-1,-1.5,length*.6,2.2,'#c08f62');c.restore();
     };
     [pose.leftFoot,pose.rightFoot].sort((a,b)=>a.y-b.y).forEach(leg);
     c.save();c.translate(pose.leanX,pose.bob+pose.leanY);
     c.rotate(pose.tilt);c.scale(1+pose.squash,1-pose.squash);
     const farLeft=leftShoulder.y<rightShoulder.y;
     if(side&&!back){const sh=farLeft?leftShoulder:rightShoulder,h=farLeft?pose.leftHand:pose.rightHand;this.arm(c,sh.x,sh.y,h.x,h.y,undefined,true);}
-    // Torso: narrows when seen from the side so no grey coat disc shows behind the apron.
-    const rx=19-6*turn,tx=pose.direction.x*1.5;
-    const coat=c.createLinearGradient(tx-rx,-34,tx+rx*.8,-2);coat.addColorStop(0,'#fffaf0');coat.addColorStop(.6,'#f5e8d0');coat.addColorStop(1,'#e2d3b6');
-    c.lineWidth=1;ellipse(c,tx,-20,rx,17,coat,'#d2bf9e');
-    ellipse(c,tx,-29,Math.max(9,rx-3),6.5,'#fff7e6','#dac8a8');
-    ellipse(c,tx-rx*.35,-26,rx*.4,8,'#fffdf5aa');
+    // Torso: a flared chef jacket with a flat hem instead of a round "bottom"; slimmer from the side and kept under the head so the chef stands upright.
+    const tw=13-2*turn,hw=17.5-3.5*turn,rx=hw,tx=pose.direction.x*1.2;
+    const jacket=():void=>{c.beginPath();c.moveTo(tx-tw,-30);c.quadraticCurveTo(tx,-40,tx+tw,-30);c.bezierCurveTo(tx+tw+2,-26,tx+hw,-17,tx+hw,-11);c.quadraticCurveTo(tx+hw,-4,tx+hw-6,-4);c.lineTo(tx-hw+6,-4);c.quadraticCurveTo(tx-hw,-4,tx-hw,-11);c.bezierCurveTo(tx-hw,-17,tx-tw-2,-26,tx-tw,-30);c.closePath();};
+    const coat=c.createLinearGradient(tx-hw,-36,tx+hw*.8,-4);coat.addColorStop(0,'#fffaf0');coat.addColorStop(.6,'#f5e8d0');coat.addColorStop(1,'#e2d3b6');
+    jacket();c.fillStyle=coat;c.fill();
+    stroke(c,tx-hw+4,-7.5,tx+hw-4,-7.5,'#e6d7ba',1.2);
+    ellipse(c,tx-hw*.35,-26,hw*.35,7,'#fffdf5aa');
     const apron=c.createLinearGradient(-12,-18,15,1);apron.addColorStop(0,'#a6d8bb');apron.addColorStop(.55,'#74b09a');apron.addColorStop(1,'#468873');
     if(back) {
-      stroke(c,-10,-28,9,-12,'#8ac3aa',2.6);stroke(c,10,-28,-9,-12,'#8ac3aa',2.6);
-      stroke(c,-1,-10,-5,-3,'#74b09a',2.8);stroke(c,1,-10,5,-3,'#74b09a',2.8);
-      rounded(c,-13,-14,26,5,2.5,apron,'#4f8f78');
-      for(const sign of [-1,1]){c.save();c.translate(sign*4.2,-11.5);c.rotate(sign*.35);ellipse(c,0,0,4.6,2.8,'#8ac3aa','#4f8f78');c.restore();}
-      ellipse(c,0,-11.5,2.2,2.2,'#5c9d85','#4f8f78');
+      stroke(c,tx-9,-31,tx+8,-14,'#8ac3aa',2.6);stroke(c,tx+9,-31,tx-8,-14,'#8ac3aa',2.6);
+      stroke(c,-1,-11,-6,-4,'#74b09a',3);stroke(c,1,-11,6,-4,'#74b09a',3);
+      rounded(c,-13,-16,26,5,2.5,apron,'#4f8f78');
+      for(const sign of [-1,1]){c.save();c.translate(sign*4.8,-13.5);c.rotate(sign*.35);ellipse(c,0,0,5.2,3.2,'#8ac3aa','#4f8f78');c.restore();}
+      ellipse(c,0,-13.5,2.4,2.4,'#5c9d85','#4f8f78');
     } else {
-      // Bib and skirt shrink to a slim front panel when the chef turns sideways; the tie shows at the back.
-      const width=26-19*turn,center=pose.direction.x*(turn>.5?9.5:8),x=center-width/2;
-      if(turn>.5)rounded(c,tx-rx+2,-14,2*rx-4,4.5,2,'#8ac3aa','#4f8f78');
-      rounded(c,x,-23,width,23,Math.min(7,width/2),apron,'#4f8f78');
-      if(turn>.5)ellipse(c,tx-pose.direction.x*(rx-3),-11.7,3.4,3,'#74b09a','#4f8f78');
-      if(turn<=.5){stroke(c,-6,-23,-4,-30,'#8ac3aa',2.2);stroke(c,6,-23,4,-30,'#8ac3aa',2.2);rounded(c,-6,-12,12,7,3,'#9fceb2','#4f8f78');}
+      // The apron is clipped to the jacket so it wraps the body instead of floating in front of it.
+      const width=22-11*turn,center=pose.direction.x*8.5,x=center-width/2;
+      c.save();jacket();c.clip();c.lineWidth=1;
+      if(turn>.5)rounded(c,tx-hw+2,-16,2*hw-4,5,2,'#8ac3aa','#4f8f78');
+      rounded(c,x,-26,width,27,Math.min(7,width/2),apron,'#4f8f78');
+      if(turn<=.5)rounded(c,center-6,-13,12,7,3,'#9fceb2','#4f8f78');
+      c.restore();
+      if(turn>.5)ellipse(c,tx-pose.direction.x*(hw-2),-13.5,3.4,3,'#74b09a','#4f8f78');
+      if(turn<=.5){stroke(c,center-6,-24,center-4,-31,'#8ac3aa',2.2);stroke(c,center+6,-24,center+4,-31,'#8ac3aa',2.2);}
     }
+    jacket();c.strokeStyle='#d2bf9e';c.lineWidth=1;c.stroke();
+    ellipse(c,tx,-29,Math.max(9,hw-5),6.5,'#fff7e6','#dac8a8');
     ellipse(c,pose.direction.x*6,-28+pose.direction.y*2,7,3,'#e58c42');
     const arm=(left:boolean)=>{
       const shoulder=left?leftShoulder:rightShoulder,hand=left?pose.leftHand:pose.rightHand;
