@@ -15,16 +15,16 @@ export function characterPose(player: Player, choppingTarget?: {x:number;y:numbe
   const f={x:Math.sin(yaw),y:-Math.cos(yaw)},lateral={x:Math.cos(yaw),y:Math.sin(yaw)*.58};
   const walking=Math.hypot(player.vx,player.vy)>12;
   const pace=walking?Math.min(1,Math.hypot(player.vx,player.vy)/210):0,cycle=player.walk*2;
-  const stride=walking?Math.sin(cycle)*3.8*pace:0;
+  const stride=walking?Math.sin(cycle)*6.4*pace:0;
   const side=Math.abs(f.x)>.6, run=player.dash>0;
-  const foot=(sign:number)=>({x:lateral.x*sign*8+f.x*stride*sign,y:lateral.y*sign*8+f.y*stride*sign*.58+2,lift:walking?Math.max(0,Math.cos(cycle+(sign>0?0:Math.PI)))*2.2*pace:0});
+  const foot=(sign:number)=>({x:lateral.x*sign*8+f.x*stride*sign,y:lateral.y*sign*8+f.y*stride*sign*.58+2,lift:walking?Math.max(0,Math.cos(cycle+(sign>0?0:Math.PI)))*4.2*pace:0});
   const pickup=player.activity==='idle'?Math.sin(Math.min(1,player.action/.2)*Math.PI):0;
   const phase=player.workTime*(player.activity==='chop'?32:15);
   const working=player.activity!=='idle';
   const leanX=working?f.x*4:f.x*pace*(run?4:1);
   const item=player.held?{x:f.x*(22+pickup*3),y:(f.y<-.3?-28:-13)+pickup*3}:null;
   const workObject=player.activity==='wash'?{x:f.x*26,y:-24+f.y*12}:null;
-  let leftHand={x:-lateral.x*19+f.x*stride,y:-17-lateral.y*16+f.y*stride*.58},rightHand={x:lateral.x*19-f.x*stride,y:-17+lateral.y*16-f.y*stride*.58};
+  const swing=stride*1.7;let leftHand={x:-lateral.x*19+f.x*swing,y:-17-lateral.y*16+f.y*swing*.58},rightHand={x:lateral.x*19-f.x*swing,y:-17+lateral.y*16-f.y*swing*.58};
   if(item) { const grip=player.held?.type==='plate'?20:12;leftHand={x:item.x-grip,y:item.y+5};rightHand={x:item.x+grip,y:item.y+5}; }
   if(working) {
     const x=f.x*26,y=-24+f.y*12,scrub=player.activity==='wash'?Math.sin(phase)*5:0;
@@ -38,10 +38,10 @@ export function characterPose(player: Player, choppingTarget?: {x:number;y:numbe
       if(f.y<-.5)rightHand={x:choppingTarget.x+10-leanX,y:-42-Math.sin(phase)*3};
     }
   }
-  return {headFrame:player.facing.y<0?1:player.facing.x<0?2:player.facing.x>0?3:0,atlasFrame:(Math.round(yaw/(Math.PI/4))+8)%8,direction:f,stride,bob:walking?-Math.abs(Math.cos(cycle))*1.2*pace:0,
+  return {headFrame:player.facing.y<0?1:player.facing.x<0?2:player.facing.x>0?3:0,atlasFrame:(Math.round(yaw/(Math.PI/4))+8)%8,direction:f,stride,bob:walking?-Math.abs(Math.cos(cycle))*2.8*pace:0,
     leanX,leanY:working?f.y*3+Math.sin(phase)*.7:f.y*pace*2,
-    tilt:working?0:(side?f.x*(run?.11:.025)*pace:Math.sin(cycle)*.018*pace),
-    squash:walking?Math.sin(cycle*2)*.01*pace:pickup*.045,headTilt:walking?-Math.sin(cycle)*.012*pace:0,
+    tilt:working?0:(side?f.x*(run?.16:.06)*pace+Math.sin(cycle)*.02*pace:Math.sin(cycle)*.05*pace),
+    squash:walking?-Math.cos(cycle*2)*.03*pace:pickup*.07,headTilt:walking?-Math.sin(cycle)*.035*pace:0,
     leftFoot:foot(-1),rightFoot:foot(1),
     leftHand,rightHand,item,workObject,activity:player.activity,phase};
 }
@@ -69,12 +69,13 @@ export class CharacterArt {
     };
     [pose.leftFoot,pose.rightFoot].sort((a,b)=>a.y-b.y).forEach(leg);
     c.save();c.translate(pose.leanX,pose.bob+pose.leanY);
-    c.rotate(pose.tilt);c.scale(1+pose.squash,1-pose.squash);
+    const breath=pose.activity==='idle'&&pose.stride===0&&!player.held?Math.sin(performance.now()/380)*.014:0;
+    c.rotate(pose.tilt);c.scale(1+pose.squash-breath,1-pose.squash+breath);
     const farLeft=leftShoulder.y<rightShoulder.y;
     if(side&&!back){const sh=farLeft?leftShoulder:rightShoulder,h=farLeft?pose.leftHand:pose.rightHand;this.arm(c,sh.x,sh.y,h.x,h.y,undefined,true);}
     // Torso: a flared chef jacket with a flat hem instead of a round "bottom"; slimmer from the side and kept under the head so the chef stands upright.
-    const tw=13-2*turn,hw=17.5-3.5*turn,rx=hw,tx=pose.direction.x*1.2;
-    const jacket=():void=>{c.beginPath();c.moveTo(tx-tw,-30);c.quadraticCurveTo(tx,-40,tx+tw,-30);c.bezierCurveTo(tx+tw+2,-26,tx+hw,-17,tx+hw,-11);c.quadraticCurveTo(tx+hw,-4,tx+hw-6,-4);c.lineTo(tx-hw+6,-4);c.quadraticCurveTo(tx-hw,-4,tx-hw,-11);c.bezierCurveTo(tx-hw,-17,tx-tw-2,-26,tx-tw,-30);c.closePath();};
+    const tw=13-2*turn,hw=17.5-3.5*turn,rx=hw,tx=pose.direction.x*1.2,hs=pose.stride*.32*(1-turn*.5);
+    const jacket=():void=>{c.beginPath();c.moveTo(tx-tw,-30);c.quadraticCurveTo(tx,-40,tx+tw,-30);c.bezierCurveTo(tx+tw+2,-26,tx+hw,-17,tx+hw,-11);c.quadraticCurveTo(tx+hw,-4+hs*.2,tx+hw-6+hs,-4);c.lineTo(tx-hw+6+hs,-4);c.quadraticCurveTo(tx-hw,-4-hs*.2,tx-hw,-11);c.bezierCurveTo(tx-hw,-17,tx-tw-2,-26,tx-tw,-30);c.closePath();};
     const coat=c.createLinearGradient(tx-hw,-36,tx+hw*.8,-4);coat.addColorStop(0,'#fffaf0');coat.addColorStop(.6,'#f5e8d0');coat.addColorStop(1,'#e2d3b6');
     jacket();c.fillStyle=coat;c.fill();
     stroke(c,tx-hw+4,-7.5,tx+hw-4,-7.5,'#e6d7ba',1.2);
@@ -121,7 +122,7 @@ export class CharacterArt {
     if(back){arms();held();tools();}
     // A soft contact shadow under the chin ties the rendered head to the flat-shaded body.
     ellipse(c,0,-22,Math.max(9,rx-4),5,'#7a65482e');
-    c.save();c.translate(0,-29);c.rotate(pose.headTilt);c.translate(0,29);
+    c.save();c.translate(0,-29-pose.bob*.45);c.rotate(pose.headTilt);c.translate(0,29);
     if(this.loaded) {
       const w=this.head.naturalWidth/4,h=this.head.naturalHeight/2;
       if(pose.atlasFrame===3)c.scale(-1,1);
@@ -136,7 +137,7 @@ export class CharacterArt {
   }
   /** A tapered sleeve with a rolled cuff; `far` shades the arm that is partly behind the torso. */
   private arm(c:CanvasRenderingContext2D,sx:number,sy:number,hx:number,hy:number,elbow?:{x:number;y:number},far=false):void {
-    const cx=elbow?.x??(sx+hx)*.5,cy=elbow?.y??Math.max(sy,hy)+4;
+    const out=sx>=0?1:-1,cx=elbow?.x??(sx+hx)*.5+out*2.6,cy=elbow?.y??Math.max(sy,hy)+4;
     limb(c,sx,sy,cx,cy,hx,hy,5.4,3.9,far?'#efe2c8':'#fff7e6','#d6c4a4');
     const t=.86,u=1-t,px=u*u*sx+2*u*t*cx+t*t*hx,py=u*u*sy+2*u*t*cy+t*t*hy;
     c.beginPath();c.arc(px,py,4.6,0,Math.PI*2);c.fillStyle=far?'#f1e5cc':'#fffbf0';c.fill();c.strokeStyle='#d6c4a4';c.lineWidth=1;c.stroke();
