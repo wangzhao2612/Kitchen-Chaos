@@ -179,3 +179,17 @@ describe('perfect heat bonus', () => {
     sim.interact(stove); expect((sim.player.held as ReturnType<typeof plate>).perfect ?? 0).toBe(0);
   });
 });
+
+it('throws held food along the facing line onto the first empty worktop and rejects bad throws',()=>{
+  const sim=new Simulation(LEVELS[0]),throwing:Control={...idle,throwItem:true};
+  sim.player.x=2*TILE+TILE/2;sim.player.y=4*TILE+TILE/2;sim.player.facing={x:0,y:-1};sim.player.held=food('tomato');
+  sim.update(1/60,throwing);
+  const event=sim.events.find(e=>e.kind==='throw')!;
+  expect(Boolean(event)).toBe(true);expect(sim.player.held).toBeNull();
+  const landed=sim.stations.find(s=>s.item?.type==='food'&&s.x+TILE/2===event.x&&s.y+TILE/2===event.y)!;
+  expect(Boolean(landed)).toBe(true);expect(['counter','board']).toContain(landed.kind);
+  // The cooldown blocks an immediate second throw, and plates can never be thrown.
+  sim.player.held=food('lettuce');sim.update(1/60,throwing);expect(sim.events.some(e=>e.kind==='throw')).toBe(false);
+  sim.player.held=plate();tick(sim,.6);sim.update(1/60,throwing);
+  expect(sim.player.held?.type).toBe('plate');expect(sim.events.some(e=>e.kind==='throw')).toBe(false);
+});

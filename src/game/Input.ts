@@ -15,6 +15,6 @@ export class Input {
   edge(...keys: string[]): boolean { const found = keys.some(k => this.edges.has(k)); keys.forEach(k => this.edges.delete(k)); return found; }
   held(...keys: string[]): boolean { return keys.some(k => this.keys.has(k)); }
   control(): Control {
-    return { x: Number(this.held('KeyD', 'ArrowRight')) - Number(this.held('KeyA', 'ArrowLeft')), y: Number(this.held('KeyS', 'ArrowDown')) - Number(this.held('KeyW', 'ArrowUp')), interact: this.edge('KeyJ'), work: this.held('Space'), dash: this.edge('KeyK') };
+    return { x: Number(this.held('KeyD', 'ArrowRight')) - Number(this.held('KeyA', 'ArrowLeft')), y: Number(this.held('KeyS', 'ArrowDown')) - Number(this.held('KeyW', 'ArrowUp')), interact: this.edge('KeyJ'), work: this.held('Space'), dash: this.edge('KeyK'), throwItem: this.edge('KeyL') };
   }
 }

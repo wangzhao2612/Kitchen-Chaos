@@ -103,7 +103,7 @@ export class AudioManager {
       filter.type='bandpass'; filter.frequency.value=kind==='sizzle'?1700:kind==='chop'?3400:2500; filter.Q.value=kind==='chop'?1.2:.5; gain.gain.value=kind==='sizzle'?.035:kind==='chop'?.12:.08;
       source.connect(filter); filter.connect(gain); gain.connect(this.effectsBus); source.start(); source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
     }
-    const notes: Partial<Record<EventKind | 'step' | 'sizzle', number[]>> = { pickup: [660, 880], place: [430, 300], chop: [190], wash: [580], ready: [660, 880, 1100], serve: [523, 659, 784, 1047], fail: [260, 210, 170], fire: [740, 540, 740, 540], dash: [220, 420], finish: [523, 659, 784, 1047, 1319], extinguish: [420], step: [110], hint: [330] };
+    const notes: Partial<Record<EventKind | 'step' | 'sizzle', number[]>> = { pickup: [660, 880], place: [430, 300], chop: [190], wash: [580], ready: [660, 880, 1100], serve: [523, 659, 784, 1047], fail: [260, 210, 170], fire: [740, 540, 740, 540], throw: [320, 620], dash: [220, 420], finish: [523, 659, 784, 1047, 1319], extinguish: [420], step: [110], hint: [330] };
     (notes[kind] ?? []).forEach((freq, i) => {
       const oscillator = ctx.createOscillator(), gain = ctx.createGain();
       const start = now + i * 0.085, duration = ['chop', 'step'].includes(kind) ? 0.035 : kind === 'extinguish' ? 0.12 : 0.15;

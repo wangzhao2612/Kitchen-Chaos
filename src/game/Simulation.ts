@@ -10,6 +10,7 @@ export const READY_SECONDS = 12;
 export const WARNING_SECONDS = 5;
 export const FIRE_SECONDS = 8;
 /** Plating within this many seconds of a dish finishing counts as perfect heat. */
+const THROW_RANGE=4.5,THROW_COOLDOWN=.5;
 export const PERFECT_SECONDS = 4;
 /** Bonus points per perfectly plated component, paid when the dish is delivered. */
 export const PERFECT_BONUS = 20;
@@ -51,6 +52,7 @@ export class Simulation {
   private recipeBag: string[] = [];
   private seed: number;
   private hintCooldown = 0;
+  private throwCooldown = 0;
 
   constructor(readonly level: Level, seed = 1701 + level.id * 77) {
     this.seed = seed;
@@ -84,6 +86,7 @@ export class Simulation {
     this.events = [];
     const step = Math.min(dt, this.time);
     this.hintCooldown = Math.max(0, this.hintCooldown - step);
+    this.throwCooldown = Math.max(0, this.throwCooldown - step);
     this.elapsed += step;
     this.time = Math.max(0, this.time - step);
     this.move(step, control);
@@ -92,6 +95,7 @@ export class Simulation {
     const previousActivity = this.player.activity;
     this.player.activity = 'idle';
     if (control.interact && this.target) this.interact(this.target);
+    if (control.throwItem) this.throwHeld();
     if (control.work && this.target) this.work(this.target, step);
     if (this.player.activity !== previousActivity) this.player.workTime = step;
     else if (this.player.activity !== 'idle') this.player.workTime += step;
@@ -208,6 +212,26 @@ export class Simulation {
   }
 
   emit(kind: GameEvent['kind'], x: number, y: number, text?: string, value?: number): void { this.events.push({ kind, x, y, text, value }); }
+  /** Overcooked-style toss: food flies along the facing direction onto the first empty worktop or board within reach. */
+  throwHeld(): void {
+    const p = this.player, held = p.held;
+    if (!held || this.throwCooldown > 0) return;
+    if (held.type !== 'food') { this.emit('hint', p.x, p.y - 30, '只能投掷食材；盘子和灭火器要用 J 放下'); return; }
+    const len = Math.hypot(p.facing.x, p.facing.y) || 1, dx = p.facing.x / len, dy = p.facing.y / len;
+    for (let d = TILE * .75; d <= TILE * THROW_RANGE; d += 6) {
+      const x = p.x + dx * d, y = p.y + dy * d;
+      const s = this.stations.find(st => x >= st.x && x < st.x + TILE && y >= st.y && y < st.y + TILE);
+      if (!s) continue;
+      if ((s.kind === 'counter' || s.kind === 'board') && !s.item) {
+        const from = { x: p.x, y: p.y - 24 };
+        s.item = held; p.held = null; p.action = .2; this.throwCooldown = THROW_COOLDOWN;
+        this.events.push({ kind: 'throw', x: s.x + TILE / 2, y: s.y + TILE / 2, from, item: held, text: '投掷！' });
+        return;
+      }
+      this.emit('hint', s.x + TILE / 2, s.y, '前方不是空的工作台或切菜板'); this.throwCooldown = .3; return;
+    }
+    this.emit('hint', p.x, p.y - 30, `前方 ${THROW_RANGE} 格内没有可落点`); this.throwCooldown = .3;
+  }
   private hint(text: string, station: Station): void { if (this.hintCooldown > 0) return; this.emit('hint', station.x + TILE / 2, station.y, text); this.hintCooldown = 0.45; }
   private pickup(s: Station): void { this.player.held = s.item; s.item = null; this.player.action = 0.2; this.emit('pickup', s.x + TILE / 2, s.y); }
   private place(s: Station): void { s.item = this.player.held; this.player.held = null; this.player.action = 0.2; this.emit('place', s.x + TILE / 2, s.y); }

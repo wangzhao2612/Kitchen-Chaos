@@ -1,6 +1,6 @@
 import { Simulation } from '../game/Simulation';
 import { INGREDIENTS, WASH_SECONDS, TILE } from '../game/types';
-import type { GameEvent, Station } from '../game/types';
+import type { GameEvent, Item, Station } from '../game/types';
 import { Camera } from './Camera';
 import { CharacterArt } from './Character';
 import { choppingToolPose } from './ChoppingPose';
@@ -13,6 +13,7 @@ export class Renderer {
   private particles: Particle[] = [];
   private floating: Floating[] = [];
   private shake = 0;
+  private flights: { from: { x: number; y: number }; to: { x: number; y: number }; item: Item; age: number }[] = [];
   private clock = 0;
   readonly width = 1280;
   height = 820;
@@ -31,6 +32,7 @@ export class Renderer {
   project(x: number, y: number): { x: number; y: number } { return { x: 80 + x, y: 95 + y * 0.78 }; }
   event(event: GameEvent): void {
     const pos = this.project(event.x, event.y);
+    if (event.kind === 'throw' && event.from && event.item) this.flights.push({ from: this.project(event.from.x, event.from.y), to: this.project(event.x, event.y), item: event.item, age: 0 });
     if (event.kind === 'serve') this.shake = .22; else if (event.kind === 'fail') this.shake = Math.max(this.shake, .3);
     if (event.text && event.kind !== 'hint') this.floating.push({ ...pos, text: event.text, life: 1.8, age: 0, good: !['fire', 'fail'].includes(event.kind) });
     const color = event.kind === 'serve' ? '#f6d379' : event.kind === 'wash' || event.kind === 'extinguish' ? '#c8eced' : '#fff0c5';
@@ -39,7 +41,7 @@ export class Renderer {
     for (let i = 0; i < count; i++) { const life = 0.4 + Math.random() * 0.5; const burst = event.kind === 'serve' ? 1.5 : 1; this.particles.push({ x: pos.x, y: pos.y - 20, vx: (Math.random() - 0.5) * 110 * burst, vy: (-35 - Math.random() * 80) * burst, life, max: life, color: colors[i % colors.length], size: 2 + Math.random() * 3 }); }
     if (this.particles.length > 220) this.particles.splice(0, this.particles.length - 220);
   }
-  clearEffects(): void { this.shake = 0; this.particles = []; this.floating = []; this.camera.reset(); }
+  clearEffects(): void { this.flights = []; this.shake = 0; this.particles = []; this.floating = []; this.camera.reset(); }
   draw(sim: Simulation, dt: number, active: boolean, inKitchen = false, insets = { top: 72, bottom: 90 }): void {
     const c = this.context;
     if (active) this.clock += dt;
@@ -92,6 +94,13 @@ export class Renderer {
     for (const s of sim.stations) this.status(s, sim, t);
     for (const p of this.particles) { if (active) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 80 * dt; } c.globalAlpha = Math.max(0, p.life / p.max); ellipse(c, p.x, p.y, p.size, p.size * 0.7, p.color); }
     c.globalAlpha = 1; this.particles = this.particles.filter(p => p.life > 0);
+    for (const fl of this.flights) {
+      if (active) fl.age += dt;
+      const k = Math.min(1, fl.age / .32), x = fl.from.x + (fl.to.x - fl.from.x) * k, y = fl.from.y + (fl.to.y - fl.from.y) * k - Math.sin(k * Math.PI) * 38;
+      ellipse(c, fl.from.x + (fl.to.x - fl.from.x) * k, fl.from.y + (fl.to.y - fl.from.y) * k + 22, 9, 4, '#21392a44');
+      c.save(); c.translate(x, y); c.rotate(k * Math.PI * 3); itemIcon(c, fl.item, 0, 0, 26); c.restore();
+    }
+    this.flights = this.flights.filter(fl => fl.age < .32);
     for (const f of this.floating) { if (active) { f.life -= dt; f.age += dt; f.y -= dt * 25; } const pop = 1 + Math.max(0, .3 - f.age) * 2.2; c.globalAlpha = Math.min(1, f.life * 2); c.save(); c.translate(f.x, f.y - 44); c.scale(pop, pop); c.font = '800 24px "Noto Sans SC", sans-serif'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = '#294440'; c.strokeText(f.text, 0, 0); c.fillStyle = f.good ? '#ffecad' : '#ffd0b2'; c.fillText(f.text, 0, 0); c.restore(); }
     c.globalAlpha = 1; this.floating = this.floating.filter(f => f.life > 0);
     if (sim.level.dynamic) {

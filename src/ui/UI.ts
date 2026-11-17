@@ -11,7 +11,7 @@ import { processIcon, processSteps } from './ProcessIcons';
 import { titleArt } from './Title';
 import { PATIENCE_SECONDS } from '../restaurant/Restaurant';
 export interface Actions { start(id: number): void; pause(): void; resume(): void; menu(): void; restart(): void; recipes(): void; mute(): void; volume(music: number, effects: number): void }
-const keys = `<span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> 移动</span><span><kbd>J</kbd> 拿取 · 放置 · 上菜</span><span><kbd>Space</kbd> 持续加工</span><span><kbd>K</kbd> 冲刺</span><span><kbd>Esc</kbd> 暂停</span>`;
+const keys = `<span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> 移动</span><span><kbd>J</kbd> 拿取 · 放置 · 上菜</span><span><kbd>Space</kbd> 持续加工</span><span><kbd>K</kbd> 冲刺</span><span><kbd>L</kbd> 投掷食材</span><span><kbd>Esc</kbd> 暂停</span>`;
 export class UI {
   readonly canvas: HTMLCanvasElement;
   readonly overlay: HTMLElement;
