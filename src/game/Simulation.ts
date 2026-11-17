@@ -33,6 +33,8 @@ export class Simulation {
   served = 0;
   revenue = 0;
   tips = 0;
+  perfects = 0;
+  throws = 0;
   private soldIngredientCost = 0;
   failed = 0;
   cleanPlates: number;
@@ -122,7 +124,7 @@ export class Simulation {
       const dish=matchRecipe(delivery.plate.components),customer=this.restaurant.customers.find(c=>c.id===delivery.customerId);
       if(!dish||!customer)continue;
       this.combo++;this.bestCombo=Math.max(this.bestCombo,this.combo);
-      const perfectBonus=(delivery.plate.perfect??0)*PERFECT_BONUS;
+      const perfectBonus=(delivery.plate.perfect??0)*PERFECT_BONUS;this.perfects+=delivery.plate.perfect??0;
       const points=dish.score+Math.floor(40*customer.patience/PATIENCE_SECONDS)+Math.min(50,(this.combo-1)*10)+perfectBonus;
       const sale=recipeEconomy(dish);this.revenue+=sale.price;this.soldIngredientCost+=sale.cost;
       const tip=customer.patience/PATIENCE_SECONDS>=TIP_PATIENCE_RATIO?Math.max(1,Math.round(sale.price*TIP_RATE)):0;this.tips+=tip;
@@ -224,7 +226,7 @@ export class Simulation {
       if (!s) continue;
       if ((s.kind === 'counter' || s.kind === 'board') && !s.item) {
         const from = { x: p.x, y: p.y - 24 };
-        s.item = held; p.held = null; p.action = .2; this.throwCooldown = THROW_COOLDOWN;
+        s.item = held; p.held = null; p.action = .2; this.throwCooldown = THROW_COOLDOWN; this.throws++;
         this.events.push({ kind: 'throw', x: s.x + TILE / 2, y: s.y + TILE / 2, from, item: held, text: '投掷！' });
         return;
       }
@@ -402,7 +404,7 @@ export class Simulation {
     const parts=[...this.waste,...unused],kinds=[...new Set(parts.map(p=>p.kind))];
     const wasteBreakdown=kinds.map(kind=>{const quantity=parts.filter(p=>p.kind===kind).length;return {kind,quantity,cost:quantity*INGREDIENT_COST[kind]};});
     const wasteCost=wasteBreakdown.reduce((sum,p)=>sum+p.cost,0),ingredientCost=this.soldIngredientCost+wasteCost;
-    return {revenue:this.revenue,tips:this.tips,ingredientCost,profit:this.revenue-ingredientCost,level:this.level.id,score:this.score,stars:this.stars,served:this.served,failed:this.failed,bestCombo:this.bestCombo,wasted:parts.length,wasteCost,wasteBreakdown};
+    return {revenue:this.revenue,tips:this.tips,perfects:this.perfects,throws:this.throws,ingredientCost,profit:this.revenue-ingredientCost,level:this.level.id,score:this.score,stars:this.stars,served:this.served,failed:this.failed,bestCombo:this.bestCombo,wasted:parts.length,wasteCost,wasteBreakdown};
   }
   plateCount(): number { return this.cleanPlates + this.dirtyQueue.length + this.returns.length + (this.level.washing ? this.restaurant.platesInTransit : 0) + (this.player.held?.type === 'plate' ? 1 : 0) + this.stations.filter(s => s.item?.type === 'plate').length; }
   prompt(s: Station | null = this.target): string {
