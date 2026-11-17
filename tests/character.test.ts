@@ -124,3 +124,14 @@ it('carries plates and food below the chin line so the face stays visible',()=>{
     }
   }
 });
+
+it('walks with a lively gait: visible stride, bob and arms swinging opposite to the legs',()=>{
+  const sim=new Simulation(LEVELS[0]),p=sim.player;
+  p.facing={x:0,y:1};p.yaw=0;p.vy=210;
+  p.walk=0;expect(characterPose(p).bob).toBeLessThan(-2);
+  p.walk=Math.PI/4;
+  const pose=characterPose(p);
+  expect(Math.abs(pose.stride)).toBeGreaterThan(4);
+  // Hands swing opposite to the feet.
+  expect((pose.leftHand.y-pose.rightHand.y)*(pose.leftFoot.y-pose.rightFoot.y)).toBeLessThan(0);
+});

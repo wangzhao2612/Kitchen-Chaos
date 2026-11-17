@@ -94,7 +94,14 @@ export function drawRestaurant(c: CanvasRenderingContext2D, sim: Simulation): vo
     // Chibi head: bigger and rounder than the body, with hair, a shiny eye, blush and a mood-driven mouth.
     const hy = -19 + (walking ? step * .8 : 0);
     ellipse(c, 1, hy, 12.5, 12, skin, '#8d674d');
-    ellipse(c, -1, hy - 7.5, 12, 6, hair); ellipse(c, -8, hy - 2, 5, 9, hair); ellipse(c, 4, hy - 12, 3.5, 3, hair);
+    const style = guest.id % 5;
+    ellipse(c, -1, hy - 7.5, 12, 6, hair);
+    if (style === 0 || style === 3) ellipse(c, -8, hy - 2, 5, 9, hair);          // long hair
+    if (style === 1) { ellipse(c, -1, hy - 14, 5, 5, hair); }                     // top bun
+    if (style === 2) { ellipse(c, -9, hy - 8, 3.5, 3.5, hair); ellipse(c, -9, hy - 4, 2.5, 2.5, hair); } // short ponytail
+    if (style === 4) { ellipse(c, 5, hy - 11, 4, 2.4, hair); }                    // quiff
+    if (style === 3) { rounded(c, -9, hy - 14, 16, 6, 3, '#e8645a', '#a84a44'); ellipse(c, 2, hy - 15, 3, 2.4, '#ffd479'); } // cap
+    if (guest.id % 7 === 2) ellipse(c, -9, hy - 9, 3.2, 2.4, '#f2a0c0', '#c27090');   // hair bow
     ellipse(c, 11, hy + 1, 4, 3.2, skin);
     const blink = Math.sin(t * .9 + guest.id * 3) > .985 ? .25 : 1;
     ellipse(c, 7, hy - 3, 2.1, 2.9 * blink, '#2e2a28'); if (blink === 1) ellipse(c, 7.6, hy - 4.2, .8, .8, '#fff');
@@ -102,7 +109,7 @@ export function drawRestaurant(c: CanvasRenderingContext2D, sim: Simulation): vo
     if (guest.unhappy) { c.beginPath(); c.arc(10, hy + 6.5, 2, Math.PI * 1.1, Math.PI * 1.9); c.strokeStyle = '#763c33'; c.lineWidth = 1.2; c.stroke(); }
     else if (guest.state === 'EATING') ellipse(c, 10, hy + 6, 1.6, 1.3 + bite * 1.4, '#a7664c');
     else { c.beginPath(); c.arc(10, hy + 4.2, 2.1, Math.PI * .1, Math.PI * .9); c.strokeStyle = '#a7664c'; c.lineWidth = 1.2; c.stroke(); }
-    if (guest.id % 4 === 0) { rounded(c, 3, hy - 4, 8, 7, 2, '#ffffff22', '#394e4b'); }
+    if (guest.id % 4 === 0) { c.strokeStyle = '#394e4b'; c.lineWidth = 1.1; c.beginPath(); c.arc(7, hy - 3, 4, 0, Math.PI * 2); c.stroke(); ellipse(c, 7, hy - 3, 4, 4, '#ffffff22'); }
     c.restore();
     c.restore();
     if (['CHOOSING', 'QUEUED', 'WAITING'].includes(guest.state)) {
