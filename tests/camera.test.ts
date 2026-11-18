@@ -31,3 +31,15 @@ it('derives preparation pictograms from the actual recipe rules, including chopp
     expect(processSteps(r,part)).toEqual([expected]);
   }
 });
+it('frames both chefs in co-op: midpoint focus, zooms out when far apart, unchanged for one chef', () => {
+  const solo = new Camera(); solo.follow({ x: 300, y: 300 }, view, 1, true);
+  const near = new Camera(); near.follow({ x: 300, y: 300 }, view, 1, true, { x: 300, y: 300 });
+  expect(near.zoom).toBe(solo.zoom); expect(near.x).toBe(solo.x); expect(near.y).toBe(solo.y);
+  const far = new Camera(); far.follow({ x: 100, y: 120 }, view, 1, true, { x: 1000, y: 640 });
+  expect(far.zoom).toBeLessThan(view.zoom); expect(far.zoom).toBeGreaterThanOrEqual(view.zoom * 0.65 - 1e-9);
+  for (const chef of [{ x: 100, y: 120 }, { x: 1000, y: 640 }]) {
+    const screen = far.screenPoint(80 + chef.x, 95 + chef.y * .78);
+    expect(screen.x).toBeGreaterThan(0); expect(screen.x).toBeLessThan(view.width);
+    expect(screen.y).toBeGreaterThan(view.top); expect(screen.y).toBeLessThan(view.height - view.bottom);
+  }
+});

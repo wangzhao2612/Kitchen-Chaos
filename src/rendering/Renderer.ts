@@ -56,7 +56,7 @@ export class Renderer {
       const cssWidth = this.canvas.clientWidth || 1280, cssHeight = this.canvas.clientHeight || 820;
       const scale = cssWidth / this.width;
       const pixelScale = Math.max(0.9, Math.min(1.65, Math.min(cssWidth / 960, cssHeight / 560) * 1.7));
-      this.camera.follow(sim.player, { width: this.width, height: this.height, zoom: pixelScale / scale, top: insets.top / scale, bottom: insets.bottom / scale }, dt, active);
+      this.camera.follow(sim.player, { width: this.width, height: this.height, zoom: pixelScale / scale, top: insets.top / scale, bottom: insets.bottom / scale }, dt, active, sim.partner);
       this.backdrop(theme.outside);
       if (active) this.shake = Math.max(0, this.shake - dt);
       const amp = this.shake * 9;
