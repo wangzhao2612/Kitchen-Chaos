@@ -193,3 +193,14 @@ it('throws held food along the facing line onto the first empty worktop and reje
   sim.player.held=plate();tick(sim,.6);sim.update(1/60,throwing);
   expect(sim.player.held?.type).toBe('plate');expect(sim.events.some(e=>e.kind==='throw')).toBe(false);
 });
+
+it('previews the throw landing spot only for held food and matches the actual throw',()=>{
+  const sim=new Simulation(LEVELS[0]);
+  sim.player.x=2*TILE+TILE/2;sim.player.y=4*TILE+TILE/2;sim.player.facing={x:0,y:-1};
+  expect(sim.throwTarget()).toBe(null);
+  sim.player.held=plate();expect(sim.throwTarget()).toBe(null);
+  sim.player.held=food('tomato');
+  const target=sim.throwTarget()!;expect(Boolean(target)).toBe(true);
+  sim.update(1/60,{...idle,throwItem:true});
+  expect(target.item?.type).toBe('food');
+});

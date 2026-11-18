@@ -13,7 +13,7 @@ export class Renderer {
   private particles: Particle[] = [];
   private floating: Floating[] = [];
   private shake = 0;
-  private flights: { from: { x: number; y: number }; to: { x: number; y: number }; item: Item; age: number }[] = [];
+  private flights: { from: { x: number; y: number }; to: { x: number; y: number }; item: Item; age: number; wx: number; wy: number }[] = [];
   private clock = 0;
   readonly width = 1280;
   height = 820;
@@ -32,7 +32,7 @@ export class Renderer {
   project(x: number, y: number): { x: number; y: number } { return { x: 80 + x, y: 95 + y * 0.78 }; }
   event(event: GameEvent): void {
     const pos = this.project(event.x, event.y);
-    if (event.kind === 'throw' && event.from && event.item) this.flights.push({ from: this.project(event.from.x, event.from.y), to: this.project(event.x, event.y), item: event.item, age: 0 });
+    if (event.kind === 'throw' && event.from && event.item) this.flights.push({ from: this.project(event.from.x, event.from.y), to: this.project(event.x, event.y), item: event.item, age: 0, wx: event.x, wy: event.y });
     if (event.kind === 'serve') this.shake = .22; else if (event.kind === 'fail') this.shake = Math.max(this.shake, .3);
     if (event.text && event.kind !== 'hint') this.floating.push({ ...pos, text: event.text, life: 1.8, age: 0, good: !['fire', 'fail'].includes(event.kind) });
     const color = event.kind === 'serve' ? '#f6d379' : event.kind === 'wash' || event.kind === 'extinguish' ? '#c8eced' : '#fff0c5';
@@ -212,7 +212,9 @@ export class Renderer {
     if (s.kind === 'trash') { rounded(c, x + 11, y - 1, 34, 30, 4, '#678276', '#445d51'); ellipse(c, cx, y - 1, 19, 8, '#87968a'); ellipse(c, cx, y - 2, 11, 4, '#344e40'); for (let k = 0; k < 3; k++) rounded(c, x + 17 + k * 9, y + 8, 3, 14, 1, '#4e6a5d'); }
     if (s.kind === 'extinguisher') { rounded(c, x + 10, y - 5, 36, 34, 3, '#e7c9a5', '#a8815c'); c.font = '900 15px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#b4553d'; c.fillText('FIRE', cx, y + 5); }
     const liftedPlate=s.kind==='sink'&&sim.target===s&&sim.player.activity==='wash';
-    if (s.item && s.kind !== 'stove' && !liftedPlate) itemIcon(c, s.item, cx, cy + (s.kind === 'sink' ? 5 : 0), 34);
+    const landing = this.flights.some(fl => fl.age < .32 && Math.abs(fl.wx - (s.x + TILE / 2)) < 1 && Math.abs(fl.wy - (s.y + TILE / 2)) < 1);
+    if (s.item && s.kind !== 'stove' && !liftedPlate && !landing) itemIcon(c, s.item, cx, cy + (s.kind === 'sink' ? 5 : 0), 34);
+    if (sim.throwTarget() === s) { c.save(); c.setLineDash([5, 4]); c.lineWidth = 2.5; c.strokeStyle = `rgba(255,236,173,${.7 + Math.sin(t * 8) * .25})`; c.beginPath(); c.ellipse(cx, cy + 2, 21, 14, 0, 0, Math.PI * 2); c.stroke(); c.restore(); }
     if (s.moving) { for (const wx of [x + 8, x + 47]) ellipse(c, wx, y + h + 7, 4, 4, '#425c54'); c.fillStyle = '#4f7163'; c.font = 'bold 13px sans-serif'; c.textAlign = 'center'; c.fillText('↔', cx, y + h - 2); }
   }
   private status(s: Station, sim: Simulation, t: number): void {

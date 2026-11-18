@@ -215,6 +215,18 @@ export class Simulation {
 
   emit(kind: GameEvent['kind'], x: number, y: number, text?: string, value?: number): void { this.events.push({ kind, x, y, text, value }); }
   /** Overcooked-style toss: food flies along the facing direction onto the first empty worktop or board within reach. */
+  /** The worktop a throw would land on right now, or null when nothing valid is in line. */
+  throwTarget(): Station | null {
+    const p = this.player;
+    if (p.held?.type !== 'food') return null;
+    const len = Math.hypot(p.facing.x, p.facing.y) || 1, dx = p.facing.x / len, dy = p.facing.y / len;
+    for (let d = TILE * .75; d <= TILE * THROW_RANGE; d += 6) {
+      const x = p.x + dx * d, y = p.y + dy * d;
+      const s = this.stations.find(st => x >= st.x && x < st.x + TILE && y >= st.y && y < st.y + TILE);
+      if (s) return (s.kind === 'counter' || s.kind === 'board') && !s.item ? s : null;
+    }
+    return null;
+  }
   throwHeld(): void {
     const p = this.player, held = p.held;
     if (!held || this.throwCooldown > 0) return;
