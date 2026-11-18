@@ -42,3 +42,22 @@ it('partner does not leak coaching hints and its held items count as waste when 
   const result = sim.result();
   if (heldByPartner && heldByPartner.type !== 'extinguisher') expect(result.wasted).toBeGreaterThan(0);
 });
+
+it('a human-style brain drives only the second chef while the first stays put', () => {
+  const sim = new Simulation(LEVELS[0]);
+  let calls = 0;
+  sim.addPartner(() => { calls++; return { ...idle, x: 0, y: 1 }; });
+  const main = { x: sim.mainPlayer.x, y: sim.mainPlayer.y }, start = { x: sim.partner!.x, y: sim.partner!.y };
+  for (let i = 0; i < 30; i++) sim.update(1 / 60, idle);
+  expect(calls).toBe(30);
+  expect(sim.mainPlayer.x).toBe(main.x);
+  expect(sim.mainPlayer.y).toBe(main.y);
+  expect(sim.partner!.y === start.y && sim.partner!.x === start.x).toBe(false);
+});
+
+it('the two chefs cannot be pushed through each other', () => {
+  const sim = new Simulation(LEVELS[0]);
+  sim.addPartner(() => ({ ...idle, x: Math.sign(sim.mainPlayer.x - sim.partner!.x), y: Math.sign(sim.mainPlayer.y - sim.partner!.y) }));
+  for (let i = 0; i < 180; i++) sim.update(1 / 60, idle);
+  expect(Math.hypot(sim.partner!.x - sim.mainPlayer.x, sim.partner!.y - sim.mainPlayer.y)).toBeGreaterThan(20);
+});
