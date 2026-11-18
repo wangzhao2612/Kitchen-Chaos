@@ -82,9 +82,10 @@ export function drawRestaurant(c: CanvasRenderingContext2D, sim: Simulation): vo
     const walking = coming || leaving, step = Math.sin(t * 15 + guest.id), waiting = ['CHOOSING', 'QUEUED', 'WAITING'].includes(guest.state);
     const bob = walking ? -Math.abs(step) * 2.6 : guest.state === 'EATING' ? Math.sin(guest.age * 3.5) * .8 : Math.sin(t * 2.2 + guest.id) * .7;
     const sway = walking ? step * .06 : waiting ? Math.sin(t * 1.6 + guest.id * 2) * .03 : 0, squash = walking ? Math.cos(t * 30 + guest.id * 2) * .04 : 0;
-    c.save(); c.translate(x, y + bob);
-    const shirt = ['#dd8660', '#8cb9c3', '#b39bc5', '#e5c365', '#629f89'][guest.id % 5], skin = ['#e6b889', '#ba825b', '#f1cba5'][guest.id % 3];
-    const hair = guest.id % 3 === 0 ? '#8e6640' : guest.id % 3 === 1 ? '#4b3b32' : '#6d4a3a';
+    const build = [1, .92, 1.07, .97, 1.04][(guest.id * 2) % 5];
+    c.save(); c.translate(x, y + bob); c.scale(build, build);
+    const shirt = ['#dd8660', '#8cb9c3', '#b39bc5', '#e5c365', '#629f89', '#d9788f', '#7c9fd6', '#a7c76a'][(guest.id * 3) % 8], skin = ['#e6b889', '#ba825b', '#f1cba5', '#8d5f43'][guest.id % 4];
+    const hair = ['#8e6640', '#4b3b32', '#6d4a3a', '#c9904a', '#2f2a2e', '#a5543d'][(guest.id * 5) % 6];
     ellipse(c, 0, 9 - bob, 15, 6, '#21392a44');
     for (const sign of [-1, 1]) { const stride = walking ? step * sign * 4 : 0; ellipse(c, sign * 6 + stride, 7 - bob * .5 - (walking ? Math.max(0, step * sign) * 2 : 0), 6.2, 3.8, '#493e37'); }
     c.save(); c.rotate(sway); c.scale(1 + squash, 1 - squash);
