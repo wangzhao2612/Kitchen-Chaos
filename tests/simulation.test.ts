@@ -216,3 +216,13 @@ it('teaches throwing once when food is held with a distant landing spot in line'
   expect(tipped).toBe(1);
   for(let gy=4;gy<9;gy++){sim.player.y=gy*TILE+TILE/2;sim.update(1/60,idle);expect(sim.events.some(e=>e.kind==='hint'&&(e.text??'').includes('L'))).toBe(false);}
 });
+
+it('can throw food onto a sliding counter and the item rides along with it',()=>{
+  const sim=new Simulation(LEVELS[3]),mover=sim.stations.find(s=>s.moving)!;
+  sim.player.x=mover.x+TILE/2;sim.player.y=mover.y+TILE*2.5;sim.player.facing={x:0,y:-1};sim.player.held=food('tomato');
+  expect(sim.throwTarget()===mover).toBe(true);
+  sim.update(1/60,{...idle,throwItem:true});
+  expect(mover.item?.type).toBe('food');
+  const x0=mover.x;tick(sim,1);
+  expect(mover.x===x0).toBe(false);expect(mover.item?.type).toBe('food');
+});
