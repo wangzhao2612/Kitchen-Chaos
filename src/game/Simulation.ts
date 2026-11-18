@@ -55,6 +55,7 @@ export class Simulation {
   private seed: number;
   private hintCooldown = 0;
   private throwCooldown = 0;
+  private throwTipShown = false;
 
   constructor(readonly level: Level, seed = 1701 + level.id * 77) {
     this.seed = seed;
@@ -97,7 +98,11 @@ export class Simulation {
     const previousActivity = this.player.activity;
     this.player.activity = 'idle';
     if (control.interact && this.target) this.interact(this.target);
-    if (control.throwItem) this.throwHeld();
+    if (control.throwItem) { this.throwTipShown = true; this.throwHeld(); }
+    else if (!this.throwTipShown && this.player.held?.type === 'food') {
+      const far = this.throwTarget();
+      if (far && Math.hypot(far.x + TILE / 2 - this.player.x, far.y + TILE / 2 - this.player.y) > TILE * 2.2) { this.throwTipShown = true; this.emit('hint', this.player.x, this.player.y - 34, '小技巧：按 L 把食材扔到前方的空台面'); }
+    }
     if (control.work && this.target) this.work(this.target, step);
     if (this.player.activity !== previousActivity) this.player.workTime = step;
     else if (this.player.activity !== 'idle') this.player.workTime += step;

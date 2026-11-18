@@ -204,3 +204,15 @@ it('previews the throw landing spot only for held food and matches the actual th
   sim.update(1/60,{...idle,throwItem:true});
   expect(target.item?.type).toBe('food');
 });
+
+it('teaches throwing once when food is held with a distant landing spot in line',()=>{
+  const sim=new Simulation(LEVELS[0]);
+  sim.player.x=2*TILE+TILE/2;sim.player.facing={x:0,y:-1};sim.player.held=food('tomato');
+  let tipped=0;
+  for(let gy=4;gy<9&&!tipped;gy++){
+    sim.player.y=gy*TILE+TILE/2;sim.update(1/60,idle);
+    tipped=sim.events.filter(e=>e.kind==='hint'&&(e.text??'').includes('L')).length;
+  }
+  expect(tipped).toBe(1);
+  for(let gy=4;gy<9;gy++){sim.player.y=gy*TILE+TILE/2;sim.update(1/60,idle);expect(sim.events.some(e=>e.kind==='hint'&&(e.text??'').includes('L'))).toBe(false);}
+});
