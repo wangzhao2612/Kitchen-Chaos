@@ -202,6 +202,7 @@ export class UI {
 
 function badges(result: RunResult): string {
   const earned = earnedAchievements(result);
-  if (!earned.length) return `<p class="badge-note">本局成就 0/${ACHIEVEMENT_COUNT} · 试试连击、完美火候或投掷食材</p>`;
-  return `<div class="badges" aria-label="本局成就">${earned.map(a => `<span class="badge" title="${a.hint}"><b>${a.icon}</b>${a.name}</span>`).join('')}</div>`;
+  const stats = `<p class="badge-note">完美火候 ${result.perfects ?? 0} 次 · 投掷食材 ${result.throws ?? 0} 次 · 最高连击 ${result.bestCombo}</p>`;
+  if (!earned.length) return `${stats}<p class="badge-note">本局成就 0/${ACHIEVEMENT_COUNT} · 试试连击、完美火候或投掷食材</p>`;
+  return `${stats}<div class="badges" aria-label="本局成就">${earned.map(a => `<span class="badge" title="${a.hint}"><b>${a.icon}</b>${a.name}</span>`).join('')}</div>`;
 }
