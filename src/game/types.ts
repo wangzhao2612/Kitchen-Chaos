@@ -31,10 +31,10 @@ export interface Level {
   theme: Theme; stations: Omit<Station, 'item' | 'stoveState' | 'elapsed' | 'cookTime' | 'extinguish'>[]; obstacles: Obstacle[];
   spawn: { x: number; y: number };
 }
-export type EventKind = 'pickup' | 'place' | 'chop' | 'wash' | 'ready' | 'serve' | 'fail' | 'fire' | 'extinguish' | 'dash' | 'finish' | 'hint';
-export interface GameEvent { kind: EventKind; x: number; y: number; text?: string; value?: number }
-export interface Control { x: number; y: number; interact: boolean; work: boolean; dash: boolean }
-export interface RunResult { level: number; score: number; stars: number; served: number; failed: number; bestCombo: number; revenue: number; tips: number; ingredientCost: number; profit: number; wasted: number; wasteCost: number; wasteBreakdown: {kind: IngredientKind; quantity: number; cost: number}[] }
+export type EventKind = 'pickup' | 'place' | 'chop' | 'wash' | 'ready' | 'serve' | 'fail' | 'fire' | 'extinguish' | 'dash' | 'finish' | 'hint' | 'throw';
+export interface GameEvent { kind: EventKind; x: number; y: number; text?: string; value?: number; from?: { x: number; y: number }; item?: Item }
+export interface Control { x: number; y: number; interact: boolean; work: boolean; dash: boolean; throwItem?: boolean }
+export interface RunResult { perfects?: number; throws?: number; level: number; score: number; stars: number; served: number; failed: number; bestCombo: number; revenue: number; tips: number; ingredientCost: number; profit: number; wasted: number; wasteCost: number; wasteBreakdown: {kind: IngredientKind; quantity: number; cost: number}[] }
 export const INGREDIENTS: Record<IngredientKind, { name: string; color: string; chop: number; cook: number }> = {
   tomato: { name: '番茄', color: '#ed6250', chop: 2, cook: 0 },
   lettuce: { name: '生菜', color: '#73b955', chop: 2, cook: 0 },

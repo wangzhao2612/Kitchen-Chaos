@@ -179,3 +179,50 @@ describe('perfect heat bonus', () => {
     sim.interact(stove); expect((sim.player.held as ReturnType<typeof plate>).perfect ?? 0).toBe(0);
   });
 });
+
+it('throws held food along the facing line onto the first empty worktop and rejects bad throws',()=>{
+  const sim=new Simulation(LEVELS[0]),throwing:Control={...idle,throwItem:true};
+  sim.player.x=2*TILE+TILE/2;sim.player.y=4*TILE+TILE/2;sim.player.facing={x:0,y:-1};sim.player.held=food('tomato');
+  sim.update(1/60,throwing);
+  const event=sim.events.find(e=>e.kind==='throw')!;
+  expect(Boolean(event)).toBe(true);expect(sim.player.held).toBeNull();
+  const landed=sim.stations.find(s=>s.item?.type==='food'&&s.x+TILE/2===event.x&&s.y+TILE/2===event.y)!;
+  expect(Boolean(landed)).toBe(true);expect(['counter','board']).toContain(landed.kind);
+  // The cooldown blocks an immediate second throw, and plates can never be thrown.
+  sim.player.held=food('lettuce');sim.update(1/60,throwing);expect(sim.events.some(e=>e.kind==='throw')).toBe(false);
+  sim.player.held=plate();tick(sim,.6);sim.update(1/60,throwing);
+  expect(sim.player.held?.type).toBe('plate');expect(sim.events.some(e=>e.kind==='throw')).toBe(false);
+});
+
+it('previews the throw landing spot only for held food and matches the actual throw',()=>{
+  const sim=new Simulation(LEVELS[0]);
+  sim.player.x=2*TILE+TILE/2;sim.player.y=4*TILE+TILE/2;sim.player.facing={x:0,y:-1};
+  expect(sim.throwTarget()).toBe(null);
+  sim.player.held=plate();expect(sim.throwTarget()).toBe(null);
+  sim.player.held=food('tomato');
+  const target=sim.throwTarget()!;expect(Boolean(target)).toBe(true);
+  sim.update(1/60,{...idle,throwItem:true});
+  expect(target.item?.type).toBe('food');
+});
+
+it('teaches throwing once when food is held with a distant landing spot in line',()=>{
+  const sim=new Simulation(LEVELS[0]);
+  sim.player.x=2*TILE+TILE/2;sim.player.facing={x:0,y:-1};sim.player.held=food('tomato');
+  let tipped=0;
+  for(let gy=4;gy<9&&!tipped;gy++){
+    sim.player.y=gy*TILE+TILE/2;sim.update(1/60,idle);
+    tipped=sim.events.filter(e=>e.kind==='hint'&&(e.text??'').includes('L')).length;
+  }
+  expect(tipped).toBe(1);
+  for(let gy=4;gy<9;gy++){sim.player.y=gy*TILE+TILE/2;sim.update(1/60,idle);expect(sim.events.some(e=>e.kind==='hint'&&(e.text??'').includes('L'))).toBe(false);}
+});
+
+it('can throw food onto a sliding counter and the item rides along with it',()=>{
+  const sim=new Simulation(LEVELS[3]),mover=sim.stations.find(s=>s.moving)!;
+  sim.player.x=mover.x+TILE/2;sim.player.y=mover.y+TILE*2.5;sim.player.facing={x:0,y:-1};sim.player.held=food('tomato');
+  expect(sim.throwTarget()===mover).toBe(true);
+  sim.update(1/60,{...idle,throwItem:true});
+  expect(mover.item?.type).toBe('food');
+  const x0=mover.x;tick(sim,1);
+  expect(mover.x===x0).toBe(false);expect(mover.item?.type).toBe('food');
+});
