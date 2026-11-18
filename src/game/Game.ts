@@ -5,6 +5,8 @@ import { AudioManager } from './Audio';
 import { Renderer } from '../rendering/Renderer';
 import { UI } from '../ui/UI';
 import { LEVELS } from '../levels/data';
+import { ChefAI } from './ChefAI';
+export type PartnerMode = 'off' | 'ai' | 'human';
 export type Screen = 'menu' | 'briefing' | 'playing' | 'paused' | 'results';
 export class Game {
   readonly input = new Input();
@@ -18,10 +20,13 @@ export class Game {
   private lastFrame = performance.now();
   private stepClock = 0;
   private alertClock = 0;
+  /** Two-player mode: an AI chef works alongside the player. Co-op runs are practice and never touch saved stars. */
+  private partnerMode: PartnerMode = 'off';
   private readonly debug: HTMLElement | null;
   constructor(root: HTMLElement) {
     window.addEventListener('keydown', () => { void this.audio.unlock(); }, { once: true, capture: true });
     this.ui = new UI(root, this.save, {
+      partner: () => { this.partnerMode = this.partnerMode === 'off' ? 'ai' : this.partnerMode === 'ai' ? 'human' : 'off'; this.ui.partnerMode = this.partnerMode; if (this.screen === 'briefing') this.ui.briefing(this.simulation.level); },
       start: id => this.start(id), pause: () => this.pause(), resume: () => this.resume(), menu: () => this.menu(), restart: () => this.start(this.simulation.level.id), recipes: () => this.recipes(),
       mute: () => { this.save.data.muted = !this.save.data.muted; this.save.write(); this.audio.updateVolume(); },
       volume: (music, effects) => { this.save.data.music = music; this.save.data.effects = effects; this.save.write(); this.audio.updateVolume(); }
@@ -38,7 +43,7 @@ export class Game {
   start(id: number): void {
     const level = LEVELS[id - 1];
     if (!level || !this.save.unlocked(id)) return;
-    this.simulation = new Simulation(level); this.screen = 'briefing'; this.accumulator = 0; this.alertClock = 0; this.input.clear(); this.renderer.clearEffects();
+    this.simulation = new Simulation(level); if (this.partnerMode === 'ai') this.simulation.addPartner(new ChefAI().brain); else if (this.partnerMode === 'human') this.simulation.addPartner(() => this.input.control2()); this.ui.partnerMode = this.partnerMode; this.screen = 'briefing'; this.accumulator = 0; this.alertClock = 0; this.input.clear(); this.renderer.clearEffects();
     this.ui.setPlaying(level); this.ui.briefing(level);
     void this.audio.pause(false); void this.audio.play(`level${id}`);
   }
@@ -71,10 +76,10 @@ export class Game {
     if (this.screen === 'playing') {
       this.accumulator += dt;
       while (this.accumulator + 1e-9 >= 1 / 60 && this.screen === 'playing') {
-        this.simulation.update(1 / 60, this.input.control()); this.accumulator -= 1 / 60;
+        this.simulation.update(1 / 60, this.input.control(this.partnerMode === 'human')); this.accumulator -= 1 / 60;
         for (const event of this.simulation.events) { this.renderer.event(event); this.audio.effect(event.kind); if (event.kind === 'hint' || event.kind === 'fire') this.ui.toast(event.text!); }
         if (this.simulation.finished) {
-          const result = this.simulation.result(); this.save.record(result.level, result.score, result.stars); this.screen = 'results'; this.ui.results(result); void this.audio.play(result.stars > 0 ? 'success' : 'failure');
+          const result = this.simulation.result(); if (this.partnerMode === 'off') this.save.record(result.level, result.score, result.stars); this.screen = 'results'; this.ui.results(result); void this.audio.play(result.stars > 0 ? 'success' : 'failure');
         }
       }
       if (Math.hypot(this.simulation.player.vx, this.simulation.player.vy) > 35) { this.stepClock += dt; if (this.stepClock > 0.24) { this.audio.effect('step'); this.stepClock = 0; } }

@@ -8,8 +8,17 @@ export class Camera {
   zoom = 1;
   private initialized = false;
   reset(): void { this.initialized = false; }
-  follow(player: { x: number; y: number }, view: CameraView, dt: number, active: boolean): void {
-    this.zoom = view.zoom;
+  /** Follow one chef, or frame both: the focus is their midpoint and the view zooms out (down to 65%) when they drift apart. */
+  follow(chef: { x: number; y: number }, view: CameraView, dt: number, active: boolean, partner?: { x: number; y: number } | null): void {
+    const player = partner ? { x: (chef.x + partner.x) / 2, y: (chef.y + partner.y) / 2 } : chef;
+    let wanted = view.zoom;
+    if (partner) {
+      const usable = Math.max(60, view.height - view.top - view.bottom);
+      const spreadX = Math.max(1, Math.abs(chef.x - partner.x) * view.zoom), spreadY = Math.max(1, Math.abs(chef.y - partner.y) * 0.78 * view.zoom);
+      wanted = view.zoom * clamp(Math.min(0.62 * view.width / spreadX, 0.62 * usable / spreadY), 0.65, 1);
+    }
+    if (!partner || !this.initialized) this.zoom = wanted;
+    else if (active) this.zoom += (wanted - this.zoom) * (1 - Math.exp(-5 * Math.max(0, dt)));
     const centerX = view.width * 0.55;
     const centerY = view.top + Math.max(60, view.height - view.top - view.bottom) * 0.52;
     // Include the restaurant's exterior in the bounds, so approaching edge counters

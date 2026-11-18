@@ -54,7 +54,8 @@ export class CharacterArt {
     this.head.onload=()=>{this.loaded=true;};
     this.head.src=`${import.meta.env.BASE_URL}art/chef-heads-v3.png`;
   }
-  draw(c: CanvasRenderingContext2D,player:Player,workItem?:Item|null,choppingTarget?:{x:number;y:number}):void {
+  draw(c: CanvasRenderingContext2D,player:Player,workItem?:Item|null,choppingTarget?:{x:number;y:number},variant=0):void {
+    const P=APRONS[variant]??APRONS[0];
     const pose=characterPose(player,choppingTarget);this.lastPose=pose;
     const back=pose.direction.y<-.4,side=Math.abs(pose.direction.x)>.6,turn=Math.abs(pose.direction.x);
     const lateral={x:-pose.direction.y,y:pose.direction.x*.58};
@@ -80,23 +81,23 @@ export class CharacterArt {
     jacket();c.fillStyle=coat;c.fill();
     stroke(c,tx-hw+4,-7.5,tx+hw-4,-7.5,'#e6d7ba',1.2);
     ellipse(c,tx-hw*.35,-26,hw*.35,7,'#fffdf5aa');
-    const apron=c.createLinearGradient(-12,-18,15,1);apron.addColorStop(0,'#a6d8bb');apron.addColorStop(.55,'#74b09a');apron.addColorStop(1,'#468873');
+    const apron=c.createLinearGradient(-12,-18,15,1);apron.addColorStop(0,P.a0);apron.addColorStop(.55,P.a1);apron.addColorStop(1,P.a2);
     if(back) {
-      stroke(c,tx-9,-31,tx+8,-14,'#8ac3aa',2.6);stroke(c,tx+9,-31,tx-8,-14,'#8ac3aa',2.6);
-      stroke(c,-1,-11,-6,-4,'#74b09a',3);stroke(c,1,-11,6,-4,'#74b09a',3);
-      rounded(c,-13,-16,26,5,2.5,apron,'#4f8f78');
-      for(const sign of [-1,1]){c.save();c.translate(sign*4.8,-13.5);c.rotate(sign*.35);ellipse(c,0,0,5.2,3.2,'#8ac3aa','#4f8f78');c.restore();}
-      ellipse(c,0,-13.5,2.4,2.4,'#5c9d85','#4f8f78');
+      stroke(c,tx-9,-31,tx+8,-14,P.light,2.6);stroke(c,tx+9,-31,tx-8,-14,P.light,2.6);
+      stroke(c,-1,-11,-6,-4,P.a1,3);stroke(c,1,-11,6,-4,P.a1,3);
+      rounded(c,-13,-16,26,5,2.5,apron,P.edge);
+      for(const sign of [-1,1]){c.save();c.translate(sign*4.8,-13.5);c.rotate(sign*.35);ellipse(c,0,0,5.2,3.2,P.light,P.edge);c.restore();}
+      ellipse(c,0,-13.5,2.4,2.4,P.knot,P.edge);
     } else {
       // The apron is clipped to the jacket so it wraps the body instead of floating in front of it.
       const width=22-11*turn,center=pose.direction.x*8.5,x=center-width/2;
       c.save();jacket();c.clip();c.lineWidth=1;
-      if(turn>.5)rounded(c,tx-hw+2,-16,2*hw-4,5,2,'#8ac3aa','#4f8f78');
-      rounded(c,x,-26,width,27,Math.min(7,width/2),apron,'#4f8f78');
-      if(turn<=.5)rounded(c,center-6,-13,12,7,3,'#9fceb2','#4f8f78');
+      if(turn>.5)rounded(c,tx-hw+2,-16,2*hw-4,5,2,P.light,P.edge);
+      rounded(c,x,-26,width,27,Math.min(7,width/2),apron,P.edge);
+      if(turn<=.5)rounded(c,center-6,-13,12,7,3,P.pale,P.edge);
       c.restore();
-      if(turn>.5)ellipse(c,tx-pose.direction.x*(hw-2),-13.5,3.4,3,'#74b09a','#4f8f78');
-      if(turn<=.5){stroke(c,center-6,-24,center-4,-31,'#8ac3aa',2.2);stroke(c,center+6,-24,center+4,-31,'#8ac3aa',2.2);}
+      if(turn>.5)ellipse(c,tx-pose.direction.x*(hw-2),-13.5,3.4,3,P.a1,P.edge);
+      if(turn<=.5){stroke(c,center-6,-24,center-4,-31,P.light,2.2);stroke(c,center+6,-24,center+4,-31,P.light,2.2);}
     }
     jacket();c.strokeStyle='#d2bf9e';c.lineWidth=1;c.stroke();
     ellipse(c,tx,-29,Math.max(9,hw-5),6.5,'#fff7e6','#dac8a8');
@@ -150,6 +151,10 @@ export class CharacterArt {
   }
 }
 /** Same peach as the cutting-hand drawn by the renderer, so every hand matches the face. */
+const APRONS=[
+  {a0:'#a6d8bb',a1:'#74b09a',a2:'#468873',edge:'#4f8f78',light:'#8ac3aa',pale:'#9fceb2',knot:'#5c9d85'},
+  {a0:'#f6c38a',a1:'#ec9b5a',a2:'#c8692f',edge:'#b5602b',light:'#f2b27a',pale:'#f8cf9f',knot:'#d8803f'}
+];
 export const SKIN='#f2be92';
 const TROUSERS='#66737f',TROUSERS_EDGE='#4b5863';
 /** Draws a tube along a quadratic curve whose radius tapers from r0 to r1, as overlapping discs. */
