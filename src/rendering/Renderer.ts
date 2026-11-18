@@ -19,6 +19,8 @@ export class Renderer {
   height = 820;
   readonly camera = new Camera();
   readonly character = new CharacterArt();
+  // A separate instance so the partner's walk/pose cache never overwrites the main chef's.
+  readonly partnerCharacter = new CharacterArt();
   constructor(readonly canvas: HTMLCanvasElement) { this.context = canvas.getContext('2d')!; this.resize(); window.addEventListener('resize', () => this.resize()); new ResizeObserver(() => this.resize()).observe(canvas); }
   resize(): void {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -88,9 +90,11 @@ export class Renderer {
     drawRestaurant(c, sim);
     // Render by foot position, so chef and counters occlude correctly.
     const objects = sim.stations.map(s => ({ depth: s.y + TILE, draw: () => this.station(s, sim, t) }));
-    objects.push({ depth: sim.player.y + 5, draw: () => this.chef(sim, t) });
+    objects.push({ depth: sim.player.y + 5, draw: () => this.chef(sim, t, sim.player, sim.target, 0) });
+    if (sim.partner) { const partner = sim.partner; objects.push({ depth: partner.y + 5, draw: () => this.chef(sim, t, partner, sim.partnerTarget, 1) }); }
     objects.sort((a, b) => a.depth - b.depth).forEach(o => o.draw());
-    this.chopping(sim);
+    this.chopping(sim.player, sim.target);
+    if (sim.partner) this.chopping(sim.partner, sim.partnerTarget);
     for (const s of sim.stations) this.status(s, sim, t);
     for (const p of this.particles) { if (active) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 80 * dt; } c.globalAlpha = Math.max(0, p.life / p.max); ellipse(c, p.x, p.y, p.size, p.size * 0.7, p.color); }
     c.globalAlpha = 1; this.particles = this.particles.filter(p => p.life > 0);
@@ -166,7 +170,7 @@ export class Renderer {
     if (s.kind === 'board') {
       rounded(c, x + 5, y - 3, 46, 31, 4, '#dcb174', '#a87843');
       for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(x + 9 + i * 10, y + 1); c.lineTo(x + 7 + i * 10, y + 24); c.strokeStyle = '#a66f3b33'; c.stroke(); }
-      if(!(sim.target===s&&sim.player.activity==='chop')) {
+      if(!this.acts(sim,s,'chop')) {
         c.save(); c.translate(x + 40, y + 4); c.rotate(-0.4); rounded(c, -3, -7, 5, 10, 2, '#544b3c'); rounded(c, -4, 1, 10, 17, 2, '#e3e7de', '#7b8e89'); c.restore();
       }
     }
@@ -187,12 +191,12 @@ export class Renderer {
       rounded(c, x + 5, y - 3, 46, 33, 6, '#677f7c', '#d3ded2'); rounded(c, x + 9, y + 2, 38, 25, 6, '#527b81'); ellipse(c, cx, cy + 5, 4, 2.6, '#364f53');
       c.beginPath(); c.moveTo(cx + 4, y - 7); c.lineTo(cx + 4, y - 17); c.quadraticCurveTo(cx + 4, y - 24, cx - 4, y - 23); c.lineTo(cx - 5, y - 9); c.strokeStyle = '#dfe8dc'; c.lineWidth = 5; c.stroke();
       for (let i = 0; i < Math.min(sim.dirtyQueue.length, 4); i++) itemIcon(c, sim.dirtyQueue[i], cx, cy + 5 - i * 3, 30);
-      const chefAtSink=sim.player.y<s.y&&Math.abs(sim.player.x-(s.x+TILE/2))<TILE;
+      const chefAtSink=this.chefAbove(sim,s);
       const labelX=cx+(chefAtSink?70:0);
       if(chefAtSink){c.beginPath();c.moveTo(cx+19,y-11);c.lineTo(labelX,y-32);c.strokeStyle='#fcebc3';c.lineWidth=2;c.stroke();}
       rounded(c, labelX - 40, y - 56, 80, 23, 7, '#285c63', '#fff0be');
       c.font = '800 16px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#fff7dd'; c.fillText(`脏盘 ×${sim.dirtyPlates}`, labelX, y - 39);
-      if (s.item?.type === 'plate' && s.item.dirty && sim.target === s && sim.player.activity === 'wash') {
+      if (s.item?.type === 'plate' && s.item.dirty && this.acts(sim, s, 'wash')) {
         c.fillStyle = '#bbe5df'; c.fillRect(cx - 6, y - 8, 3, 25);
         for (let k = 0; k < 5; k++) { const ph = (t * 2 + k * 0.2) % 1; ellipse(c, x + 13 + k * 7, y + 17 - ph * 14, 3 + ph, 2 + ph, '#e5f5e9aa', '#fffbed'); }
       }
@@ -211,7 +215,7 @@ export class Renderer {
     }
     if (s.kind === 'trash') { rounded(c, x + 11, y - 1, 34, 30, 4, '#678276', '#445d51'); ellipse(c, cx, y - 1, 19, 8, '#87968a'); ellipse(c, cx, y - 2, 11, 4, '#344e40'); for (let k = 0; k < 3; k++) rounded(c, x + 17 + k * 9, y + 8, 3, 14, 1, '#4e6a5d'); }
     if (s.kind === 'extinguisher') { rounded(c, x + 10, y - 5, 36, 34, 3, '#e7c9a5', '#a8815c'); c.font = '900 15px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#b4553d'; c.fillText('FIRE', cx, y + 5); }
-    const liftedPlate=s.kind==='sink'&&sim.target===s&&sim.player.activity==='wash';
+    const liftedPlate=s.kind==='sink'&&this.acts(sim,s,'wash');
     const landing = this.flights.some(fl => fl.age < .32 && Math.abs(fl.wx - (s.x + TILE / 2)) < 1 && Math.abs(fl.wy - (s.y + TILE / 2)) < 1);
     if (s.item && s.kind !== 'stove' && !liftedPlate && !landing) itemIcon(c, s.item, cx, cy + (s.kind === 'sink' ? 5 : 0), 34);
     if (sim.throwTarget() === s) { c.save(); c.setLineDash([5, 4]); c.lineWidth = 2.5; c.strokeStyle = `rgba(255,236,173,${.7 + Math.sin(t * 8) * .25})`; c.beginPath(); c.ellipse(cx, cy + 2, 21, 14, 0, 0, Math.PI * 2); c.stroke(); c.restore(); }
@@ -231,27 +235,29 @@ export class Renderer {
       if (s.stoveState === 'IDLE' && s.item) { c.font = '800 15px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#fff4d4'; c.fillText('+', p.x, p.y - 21); }
     }
     if (progress >= 0) {
-      const chefAbove=sim.player.y<s.y&&Math.abs(sim.player.x-(s.x+TILE/2))<TILE;
+      const chefAbove=this.chefAbove(sim,s);
       const barY=chefAbove?p.y+TILE*.78+20:p.y-30;
       rounded(c, p.x - 25, barY, 50, 9, 4, '#354d46', '#fff1ca'); rounded(c, p.x - 23, barY+2, Math.max(0.2, Math.min(1, progress) * 46), 5, 2, color);
       if (label) { ellipse(c, p.x + 30, barY+4, 9, 8, color); c.font = '900 12px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#fff9e4'; c.fillText(label, p.x + 30, barY+8); }
     }
     if (sim.target === s) { const glow = 0.5 + Math.sin(t * 4) * 0.1; c.globalAlpha = glow; rounded(c, p.x - TILE / 2 - 2, p.y - 9, TILE + 4, TILE * 0.78 + 5, 6, '#ffffff00', '#fff0ac'); c.globalAlpha = 1; }
   }
-  private chef(sim: Simulation, _t: number): void {
-    const c = this.context, player = sim.player, p = this.project(player.x, player.y);
+  private acts(sim: Simulation, s: Station, activity: string): boolean { return (sim.target === s && sim.player.activity === activity) || (sim.partnerTarget === s && sim.partner?.activity === activity); }
+  private chefAbove(sim: Simulation, s: Station): boolean { return [sim.player, sim.partner].some(p => !!p && p.y < s.y && Math.abs(p.x - (s.x + TILE / 2)) < TILE); }
+  private chef(sim: Simulation, _t: number, player: Simulation['player'], target: Station | null, variant: number): void {
+    const c = this.context, p = this.project(player.x, player.y);
     ellipse(c,p.x+3,p.y+5,23,9,'#3144394a');
-    c.beginPath();c.ellipse(p.x,p.y+1,23,15,0,0,Math.PI*2);c.strokeStyle=player.dash>0?'#ffe3a0':'#f4d27b';c.lineWidth=3;c.stroke();
+    c.beginPath();c.ellipse(p.x,p.y+1,23,15,0,0,Math.PI*2);c.strokeStyle=variant?(player.dash>0?'#ffd2a0':'#f0a15a'):player.dash>0?'#ffe3a0':'#f4d27b';c.lineWidth=3;c.stroke();
     if(player.dash>0)for(let i=0;i<3;i++)ellipse(c,p.x-player.facing.x*(20+i*8),p.y-player.facing.y*(15+i*6),5-i,3,'#ffedb966');
-    const board=sim.target?.kind==='board'&&player.activity==='chop'?this.project(sim.target.x+TILE/2,sim.target.y):null;
-    c.save();c.translate(p.x,p.y);this.character.draw(c,player,sim.target?.kind==='sink'?sim.target.item:null,board?{x:board.x-p.x,y:board.y+13-p.y}:undefined);c.restore();
+    const board=target?.kind==='board'&&player.activity==='chop'?this.project(target.x+TILE/2,target.y):null;
+    c.save();c.translate(p.x,p.y);(variant?this.partnerCharacter:this.character).draw(c,player,target?.kind==='sink'?target.item:null,board?{x:board.x-p.x,y:board.y+13-p.y}:undefined,variant);c.restore();
   }
-  private chopping(sim:Simulation):void {
-    const s=sim.target;if(s?.kind!=='board'||sim.player.activity!=='chop'||s.item?.type!=='food')return;
+  private chopping(player:Simulation['player'],s:Station|null):void {
+    if(s?.kind!=='board'||player.activity!=='chop'||s.item?.type!=='food')return;
     // The back-facing working area sits behind the head/body; only sleeve motion is visible.
-    if(sim.player.facing.y<0)return;
+    if(player.facing.y<0)return;
     const c=this.context,p=this.project(s.x,s.y),cx=p.x+TILE/2,cy=p.y+13;
-    const tool=choppingToolPose(sim.player.facing,sim.player.workTime),lift=tool.lift;
+    const tool=choppingToolPose(player.facing,player.workTime),lift=tool.lift;
     if(tool.side) {
       c.save();c.translate(cx,cy-lift);c.scale(tool.direction,1);c.lineWidth=1.5;
       ellipse(c,5,-4+lift,4.5,3.5,'#f2be92','#9d634a');

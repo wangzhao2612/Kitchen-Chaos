@@ -24,7 +24,7 @@ const length = (x: number, y: number) => Math.hypot(x, y);
 /** Pure simulation: no DOM, drawing, audio or wall-clock dependencies. */
 export class Simulation {
   readonly stations: Station[];
-  readonly player: Player;
+  player: Player;
   time = ROUND_SECONDS;
   elapsed = 0;
   score = 0;
@@ -46,6 +46,11 @@ export class Simulation {
   events: GameEvent[] = [];
   finished = false;
   target: Station | null = null;
+  /** Second chef (two-player mode). It acts through the same rules as the main chef; `partnerBrain` supplies its controls each frame. */
+  partner: Player | null = null;
+  partnerTarget: Station | null = null;
+  partnerBrain: ((sim: Simulation) => Control) | null = null;
+  readonly mainPlayer: Player;
   private orderClock = 0;
   private orderId = 0;
   private arrivalId = 0;
@@ -63,6 +68,7 @@ export class Simulation {
     this.restaurant = new Restaurant(level.washing);
     this.cleanPlates = level.plates;
     this.player = { ...level.spawn, vx: 0, vy: 0, facing: { x: 0, y: -1 }, held: null, dash: 0, cooldown: 0, walk: 0, yaw: 0, heading: 0, action: 0, activity: 'idle', workTime: 0 };
+    this.mainPlayer = this.player;
     const extinguisher = this.stations.find(s => s.kind === 'extinguisher');
     if (extinguisher) extinguisher.item = { type: 'extinguisher' };
     this.spawnOrder();
@@ -84,6 +90,31 @@ export class Simulation {
     if(this.restaurant.arrive(recipeId, quantity)) this.arrivalId++;
   }
 
+  private chefStep(step: number, control: Control, isMain: boolean): void {
+    this.move(step, control);
+    if (isMain) this.updateMovingCounters(step);
+    this.target = this.findTarget();
+    const previousActivity = this.player.activity;
+    this.player.activity = 'idle';
+    if (control.interact && this.target) this.interact(this.target);
+    if (control.throwItem) { this.throwTipShown = true; this.throwHeld(); }
+    else if (isMain && !this.throwTipShown && this.player.held?.type === 'food') {
+      const far = this.throwTarget();
+      if (far && Math.hypot(far.x + TILE / 2 - this.player.x, far.y + TILE / 2 - this.player.y) > TILE * 2.2) { this.throwTipShown = true; this.emit('hint', this.player.x, this.player.y - 34, '小技巧：按 L 把食材扔到前方的空台面'); }
+    }
+    if (control.work && this.target) this.work(this.target, step);
+    if (this.player.activity !== previousActivity) this.player.workTime = step;
+    else if (this.player.activity !== 'idle') this.player.workTime += step;
+    else this.player.workTime = 0;
+  }
+  /** Add a second chef next to the first one. Pass a brain to drive it (see ChefAI). */
+  addPartner(brain: (sim: Simulation) => Control): void {
+    const spawn = this.level.spawn;
+    const candidates = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1]].map(([dx, dy]) => ({ x: spawn.x + dx * TILE, y: spawn.y + dy * TILE }));
+    const at = candidates.find(c => !this.blocked(c.x, c.y)) ?? spawn;
+    this.partner = { ...this.mainPlayer, ...at, vx: 0, vy: 0, facing: { x: 0, y: -1 }, held: null, dash: 0, cooldown: 0, walk: 0, yaw: 0, heading: 0, action: 0, activity: 'idle', workTime: 0 };
+    this.partnerBrain = brain;
+  }
   update(dt: number, control: Control): void {
     if (this.finished) return;
     this.events = [];
@@ -92,21 +123,16 @@ export class Simulation {
     this.throwCooldown = Math.max(0, this.throwCooldown - step);
     this.elapsed += step;
     this.time = Math.max(0, this.time - step);
-    this.move(step, control);
-    this.updateMovingCounters(step);
-    this.target = this.findTarget();
-    const previousActivity = this.player.activity;
-    this.player.activity = 'idle';
-    if (control.interact && this.target) this.interact(this.target);
-    if (control.throwItem) { this.throwTipShown = true; this.throwHeld(); }
-    else if (!this.throwTipShown && this.player.held?.type === 'food') {
-      const far = this.throwTarget();
-      if (far && Math.hypot(far.x + TILE / 2 - this.player.x, far.y + TILE / 2 - this.player.y) > TILE * 2.2) { this.throwTipShown = true; this.emit('hint', this.player.x, this.player.y - 34, '小技巧：按 L 把食材扔到前方的空台面'); }
+    this.chefStep(step, control, true);
+    if (this.partner && this.partnerBrain) {
+      const main = this.mainPlayer, mainTarget = this.target, mark = this.events.length;
+      this.player = this.partner;
+      this.chefStep(step, this.partnerBrain(this), false);
+      this.partnerTarget = this.target;
+      this.player = main; this.target = mainTarget;
+      // The partner works silently: no coaching toasts for actions the human did not take.
+      this.events = [...this.events.slice(0, mark), ...this.events.slice(mark).filter(e => e.kind !== 'hint')];
     }
-    if (control.work && this.target) this.work(this.target, step);
-    if (this.player.activity !== previousActivity) this.player.workTime = step;
-    else if (this.player.activity !== 'idle') this.player.workTime += step;
-    else this.player.workTime = 0;
     this.updateStoves(step);
     for (const party of this.restaurant.update(step)) {
       const quantity = party.customers.length;
@@ -162,6 +188,12 @@ export class Simulation {
     return this.activeObstacles().some(o => this.circleHits(x, y, o)) || this.stations.some(s => this.circleHits(x, y, { x: s.x, y: s.y, w: TILE, h: TILE }));
   }
 
+  private hitsOtherChef(x: number, y: number): boolean {
+    const other = this.player === this.mainPlayer ? this.partner : this.mainPlayer;
+    if (!other) return false;
+    const now = Math.hypot(this.player.x - other.x, this.player.y - other.y), next = Math.hypot(x - other.x, y - other.y);
+    return next < RADIUS * 1.7 && next < now; // only forbid moving closer, so overlapping chefs can always separate
+  }
   private move(dt: number, control: Control): void {
     const p = this.player, startX=p.x, startY=p.y;
     p.cooldown = Math.max(0, p.cooldown - dt);
@@ -185,9 +217,9 @@ export class Simulation {
     const steps = Math.max(1, Math.ceil(Math.max(Math.abs(p.vx * dt), Math.abs(p.vy * dt)) / 8));
     for (let i = 0; i < steps; i++) {
       const nx = p.x + p.vx * dt / steps;
-      if (!this.blocked(nx, p.y)) p.x = nx; else p.vx = 0;
+      if (!this.blocked(nx, p.y) && !this.hitsOtherChef(nx, p.y)) p.x = nx; else p.vx = 0;
       const ny = p.y + p.vy * dt / steps;
-      if (!this.blocked(p.x, ny)) p.y = ny; else p.vy = 0;
+      if (!this.blocked(p.x, ny) && !this.hitsOtherChef(p.x, ny)) p.y = ny; else p.vy = 0;
     }
     p.walk += length(p.x-startX,p.y-startY) * 0.04;
   }
@@ -198,7 +230,7 @@ export class Simulation {
       const m = s.moving;
       const next = clamp(s.x + m.direction * dt * 22, m.fromX, m.toX);
       const swept = { x: Math.min(s.x, next), y: s.y, w: TILE + Math.abs(next - s.x), h: TILE };
-      if (!this.circleHits(this.player.x, this.player.y, swept)) s.x = next;
+      if (!this.circleHits(this.mainPlayer.x, this.mainPlayer.y, swept) && !(this.partner && this.circleHits(this.partner.x, this.partner.y, swept))) s.x = next;
       if (s.x >= m.toX) m.direction = -1;
       if (s.x <= m.fromX) m.direction = 1;
     }
@@ -417,13 +449,13 @@ export class Simulation {
 
   get stars(): number { return this.level.stars.filter(v => this.score >= v).length; }
   result(): RunResult {
-    const unused=[this.player.held,...this.stations.map(s=>s.item),...this.restaurant.deliveries.map(d=>d.plate)].flatMap(item=>item&&item.type!=='extinguisher'?item.components:[]);
+    const unused=[this.mainPlayer.held,this.partner?.held??null,...this.stations.map(s=>s.item),...this.restaurant.deliveries.map(d=>d.plate)].flatMap(item=>item&&item.type!=='extinguisher'?item.components:[]);
     const parts=[...this.waste,...unused],kinds=[...new Set(parts.map(p=>p.kind))];
     const wasteBreakdown=kinds.map(kind=>{const quantity=parts.filter(p=>p.kind===kind).length;return {kind,quantity,cost:quantity*INGREDIENT_COST[kind]};});
     const wasteCost=wasteBreakdown.reduce((sum,p)=>sum+p.cost,0),ingredientCost=this.soldIngredientCost+wasteCost;
     return {revenue:this.revenue,tips:this.tips,perfects:this.perfects,throws:this.throws,ingredientCost,profit:this.revenue-ingredientCost,level:this.level.id,score:this.score,stars:this.stars,served:this.served,failed:this.failed,bestCombo:this.bestCombo,wasted:parts.length,wasteCost,wasteBreakdown};
   }
-  plateCount(): number { return this.cleanPlates + this.dirtyQueue.length + this.returns.length + (this.level.washing ? this.restaurant.platesInTransit : 0) + (this.player.held?.type === 'plate' ? 1 : 0) + this.stations.filter(s => s.item?.type === 'plate').length; }
+  plateCount(): number { return this.cleanPlates + this.dirtyQueue.length + this.returns.length + (this.level.washing ? this.restaurant.platesInTransit : 0) + (this.mainPlayer.held?.type === 'plate' ? 1 : 0) + (this.partner?.held?.type === 'plate' ? 1 : 0) + this.stations.filter(s => s.item?.type === 'plate').length; }
   prompt(s: Station | null = this.target): string {
     if (!s) return '靠近设施查看操作 · J 拾放 · Space 加工';
     const held = this.player.held;

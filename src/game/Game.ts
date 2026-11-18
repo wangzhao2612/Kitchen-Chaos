@@ -5,6 +5,7 @@ import { AudioManager } from './Audio';
 import { Renderer } from '../rendering/Renderer';
 import { UI } from '../ui/UI';
 import { LEVELS } from '../levels/data';
+import { ChefAI } from './ChefAI';
 export type Screen = 'menu' | 'briefing' | 'playing' | 'paused' | 'results';
 export class Game {
   readonly input = new Input();
@@ -18,10 +19,13 @@ export class Game {
   private lastFrame = performance.now();
   private stepClock = 0;
   private alertClock = 0;
+  /** Two-player mode: an AI chef works alongside the player. Co-op runs are practice and never touch saved stars. */
+  private partnerMode = false;
   private readonly debug: HTMLElement | null;
   constructor(root: HTMLElement) {
     window.addEventListener('keydown', () => { void this.audio.unlock(); }, { once: true, capture: true });
     this.ui = new UI(root, this.save, {
+      partner: () => { this.partnerMode = !this.partnerMode; this.ui.partnerMode = this.partnerMode; if (this.screen === 'briefing') this.ui.briefing(this.simulation.level); },
       start: id => this.start(id), pause: () => this.pause(), resume: () => this.resume(), menu: () => this.menu(), restart: () => this.start(this.simulation.level.id), recipes: () => this.recipes(),
       mute: () => { this.save.data.muted = !this.save.data.muted; this.save.write(); this.audio.updateVolume(); },
       volume: (music, effects) => { this.save.data.music = music; this.save.data.effects = effects; this.save.write(); this.audio.updateVolume(); }
@@ -38,7 +42,7 @@ export class Game {
   start(id: number): void {
     const level = LEVELS[id - 1];
     if (!level || !this.save.unlocked(id)) return;
-    this.simulation = new Simulation(level); this.screen = 'briefing'; this.accumulator = 0; this.alertClock = 0; this.input.clear(); this.renderer.clearEffects();
+    this.simulation = new Simulation(level); if (this.partnerMode) this.simulation.addPartner(new ChefAI().brain); this.ui.partnerMode = this.partnerMode; this.screen = 'briefing'; this.accumulator = 0; this.alertClock = 0; this.input.clear(); this.renderer.clearEffects();
     this.ui.setPlaying(level); this.ui.briefing(level);
     void this.audio.pause(false); void this.audio.play(`level${id}`);
   }
@@ -74,7 +78,7 @@ export class Game {
         this.simulation.update(1 / 60, this.input.control()); this.accumulator -= 1 / 60;
         for (const event of this.simulation.events) { this.renderer.event(event); this.audio.effect(event.kind); if (event.kind === 'hint' || event.kind === 'fire') this.ui.toast(event.text!); }
         if (this.simulation.finished) {
-          const result = this.simulation.result(); this.save.record(result.level, result.score, result.stars); this.screen = 'results'; this.ui.results(result); void this.audio.play(result.stars > 0 ? 'success' : 'failure');
+          const result = this.simulation.result(); if (!this.partnerMode) this.save.record(result.level, result.score, result.stars); this.screen = 'results'; this.ui.results(result); void this.audio.play(result.stars > 0 ? 'success' : 'failure');
         }
       }
       if (Math.hypot(this.simulation.player.vx, this.simulation.player.vy) > 35) { this.stepClock += dt; if (this.stepClock > 0.24) { this.audio.effect('step'); this.stepClock = 0; } }
