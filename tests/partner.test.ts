@@ -74,3 +74,14 @@ it('the AI leaves an order alone when the human is already assembling that dish'
   sim.orders.push({ id: 100, recipeId: 'salad', remaining: 200, duration: 200, quantity: 1 });
   expect(ai.pickOrder()).toBe('salad');
 });
+
+it('a clumsy AI grabs wrong ingredients, puts them back at no cost, and still cooks and serves', () => {
+  const sim = new Simulation(LEVELS[2]), ai = new ChefAI(0.6);
+  sim.addPartner(ai.brain);
+  for (let i = 0; i < 240 * 60 && !sim.finished; i++) sim.update(1 / 60, idle);
+  expect(ai.lastError, ai.lastError).toBe('');
+  expect(ai.goofs).toBeGreaterThan(0);
+  expect(sim.served).toBeGreaterThanOrEqual(2);
+  // Only the dish still being assembled when the round ends is wasted; the goofs themselves cost nothing.
+  expect(sim.result().wasteCost).toBeLessThanOrEqual(20);
+});

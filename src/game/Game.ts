@@ -43,7 +43,7 @@ export class Game {
   start(id: number): void {
     const level = LEVELS[id - 1];
     if (!level || !this.save.unlocked(id)) return;
-    this.simulation = new Simulation(level); if (this.partnerMode === 'ai') this.simulation.addPartner(new ChefAI().brain); else if (this.partnerMode === 'human') this.simulation.addPartner(() => this.input.control2()); this.ui.partnerMode = this.partnerMode; this.screen = 'briefing'; this.accumulator = 0; this.alertClock = 0; this.input.clear(); this.renderer.clearEffects();
+    this.simulation = new Simulation(level); if (this.partnerMode === 'ai') this.simulation.addPartner(new ChefAI(0.15).brain); else if (this.partnerMode === 'human') this.simulation.addPartner(() => this.input.control2()); this.ui.partnerMode = this.partnerMode; this.screen = 'briefing'; this.accumulator = 0; this.alertClock = 0; this.input.clear(); this.renderer.clearEffects();
     this.ui.setPlaying(level); this.ui.briefing(level);
     void this.audio.pause(false); void this.audio.play(`level${id}`);
   }

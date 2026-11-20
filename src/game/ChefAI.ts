@@ -20,7 +20,13 @@ export class ChefAI {
   private routine: Routine | null = null;
   /** Dishes finished since the round began, mostly useful for tests and debugging. */
   dishes = 0;
+  /** How many times the chef grabbed the wrong ingredient and had to put it back. */
+  goofs = 0;
   lastError = '';
+  private seed = 20241;
+  /** `goofRate` is the chance (0–1) per ingredient of grabbing the wrong one first; it makes the partner feel human without costing any food. */
+  constructor(private readonly goofRate = 0) {}
+  private roll(): boolean { this.seed = (this.seed * 1103515245 + 12345) & 0x7fffffff; return this.seed / 0x7fffffff < this.goofRate; }
 
   /** Pass this as `Simulation.partnerBrain`. */
   readonly brain = (sim: Simulation): Control => {
@@ -104,6 +110,24 @@ export class ChefAI {
   private *work(station: Station, seconds: number): Routine { yield* this.goTo(station); yield* this.wait(seconds + .08, { ...IDLE, work: true }); }
   private *press(): Routine { yield { ...IDLE, interact: true }; yield IDLE; }
 
+  /** Take an ingredient from its crate; sometimes grab the wrong one first, hesitate, and put it back. */
+  private *fetchIngredient(kind: IngredientKind): Routine {
+    if (this.goofRate > 0 && this.roll()) {
+      const wrong = this.sim.stations.filter(s => s.kind === 'crate' && s.ingredient !== kind);
+      const crate = wrong[Math.floor((this.seed % 997) / 997 * wrong.length)];
+      if (crate) {
+        yield* this.interact(crate);
+        if (this.me.held) {
+          this.goofs++;
+          yield* this.wait(.7);
+          yield* this.interact(crate); // putting an untouched ingredient back costs nothing
+          if (this.me.held) throw new Error('Could not return the wrong ingredient');
+        }
+      }
+    }
+    yield* this.interact(this.find('crate', kind));
+  }
+
   private *getPlate(): Routine {
     const sim = this.sim;
     if (!sim.cleanPlates) {
@@ -132,7 +156,7 @@ export class ChefAI {
       const stove = sim.stations.find(s => s.kind === 'stove' && !s.item);
       if (!stove) throw new Error('No free stove');
       for (const kind of ['tomato', 'onion'] as IngredientKind[]) {
-        yield* this.interact(this.find('crate', kind));
+        yield* this.fetchIngredient(kind);
         yield* this.interact(board);
         yield* this.work(board, INGREDIENTS[kind].chop);
         yield* this.press();
@@ -144,7 +168,7 @@ export class ChefAI {
       const pending: Station[] = [];
       const ordered = [...r.components].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
       for (const part of ordered) {
-        yield* this.interact(this.find('crate', part.kind));
+        yield* this.fetchIngredient(part.kind);
         if (part.state === 'CHOPPED') {
           yield* this.interact(board);
           yield* this.work(board, INGREDIENTS[part.kind].chop);
