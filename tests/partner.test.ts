@@ -61,3 +61,16 @@ it('the two chefs cannot be pushed through each other', () => {
   for (let i = 0; i < 180; i++) sim.update(1 / 60, idle);
   expect(Math.hypot(sim.partner!.x - sim.mainPlayer.x, sim.partner!.y - sim.mainPlayer.y)).toBeGreaterThan(20);
 });
+
+it('the AI leaves an order alone when the human is already assembling that dish', () => {
+  const sim = new Simulation(LEVELS[0]), ai = new ChefAI();
+  sim.addPartner(ai.brain);
+  sim.update(1 / 60, idle);
+  sim.orders = [{ id: 99, recipeId: 'salad', remaining: 200, duration: 200, quantity: 1 }];
+  expect(ai.pickOrder()).toBe('salad');
+  sim.mainPlayer.held = { type: 'plate', components: [{ kind: 'lettuce', state: 'CHOPPED' }], dirty: false, progress: 0 };
+  expect(ai.pickOrder()).toBe(null);
+  // A second order of the same dish is still worth cooking.
+  sim.orders.push({ id: 100, recipeId: 'salad', remaining: 200, duration: 200, quantity: 1 });
+  expect(ai.pickOrder()).toBe('salad');
+});
