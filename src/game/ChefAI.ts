@@ -1,6 +1,6 @@
 import { INGREDIENTS, TILE, WASH_SECONDS } from './types';
 import type { Control, IngredientKind, Station } from './types';
-import { recipe } from '../cooking/recipes';
+import { RECIPES, isSubset, recipe } from '../cooking/recipes';
 import type { Simulation } from './Simulation';
 
 const IDLE: Control = { x: 0, y: 0, interact: false, work: false, dash: false };
@@ -166,9 +166,23 @@ export class ChefAI {
     if (sim.served > before) this.dishes++;
   }
 
-  private pickOrder(): string | null {
-    const sim = this.sim;
+  /** Dishes someone else is already assembling: a partly-filled plate in the human's hands or on a worktop counts as claiming that recipe. */
+  private claimed(): Map<string, number> {
+    const sim = this.sim, claims = new Map<string, number>();
+    const plates = [sim.mainPlayer.held, ...sim.stations.filter(s => s.kind === 'counter' || s.kind === 'board').map(s => s.item)];
+    for (const item of plates) {
+      if (item?.type !== 'plate' || item.dirty || !item.components.length) continue;
+      const wanted = new Set(sim.orders.map(o => o.recipeId));
+      const match = RECIPES.find(r => wanted.has(r.id) && isSubset(item.components, r.components));
+      if (match) claims.set(match.id, (claims.get(match.id) ?? 0) + 1);
+    }
+    return claims;
+  }
+
+  pickOrder(): string | null {
+    const sim = this.sim, claims = this.claimed();
     const options = sim.orders
+      .filter(o => sim.orders.filter(x => x.recipeId === o.recipeId).reduce((sum, x) => sum + x.quantity, 0) - (claims.get(o.recipeId) ?? 0) > 0)
       .filter(o => DISH_SECONDS[o.recipeId] !== undefined)
       .filter(o => o.remaining > DISH_SECONDS[o.recipeId] + (sim.cleanPlates ? 6 : 20) && sim.time > DISH_SECONDS[o.recipeId] + 4)
       .sort((a, b) => recipe(b.recipeId).score / DISH_SECONDS[b.recipeId] - recipe(a.recipeId).score / DISH_SECONDS[a.recipeId]);
