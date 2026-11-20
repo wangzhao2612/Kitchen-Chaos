@@ -1,44 +1,49 @@
-# Kitchen Chaos · 疯狂厨房
+# Kitchen Chaos
 
-一款可在浏览器中运行的单人 2D 俯视烹饪经营游戏。玩家独立完成取料、切菜、烹饪、装盘、出餐和洗碗，在五个原创厨房中挑战五分钟营业与三星评分。
+A browser-based 2D top-down cooking and restaurant game. Fetch ingredients, chop, cook, plate, serve and wash dishes, then take on a five-minute shift and a three-star rating across five original kitchens. Play solo, with an AI sous-chef, or share one keyboard with a friend.
 
-项目使用 TypeScript、Vite、HTML5 Canvas 和 Web Audio API，无需后端、账号或数据库。角色、美术和配乐使用原创资源。
+Built with TypeScript, Vite, HTML5 Canvas and the Web Audio API. No backend, account or database is needed. Characters, art and music are original assets.
 
-## 项目解决的问题
+> The in-game interface is in Chinese (Simplified). Names of buttons and levels are given below with English glosses.
 
-本项目围绕一个玩家的操作能力设计厨房管理体验：让玩家通过简单的键盘操作完成整个服务流程，同时体验安排火候、处理多道订单和循环使用盘子的策略挑战。
+## What problem does it solve?
 
-- **一个人完成整个厨房流程**：紧凑地图、可独立操作的设施和逐步增加的难度，支持单人完成全部六种菜品。
-- **降低开始游玩的门槛**：安装依赖后即可在本机浏览器运行；构建产物可由静态网站服务器提供。
-- **减少操作歧义与误拿损失**：统一使用 J 拿取和放置，靠近设施显示提示；拿错且未经加工的原料可以放回对应食材箱。
-- **让经营反馈直观可读**：订单用图标和数量展示，顾客表情与菜品耐心条提示紧迫程度，结算同时显示成绩、收益和食材损耗。
+The game is designed around one player's ability to run a whole kitchen: simple keyboard controls cover the entire service flow, while heat timing, multiple orders and plate recycling add a layer of strategy.
 
-## 主要功能
+- **One person can run the whole kitchen.** Compact maps, self-contained stations and a gradual difficulty curve let a single player cook all six dishes.
+- **Low barrier to start.** After installing dependencies the game runs in a local browser, and the build output can be served by any static web server.
+- **Fewer ambiguous actions and accidental losses.** One key (J) picks up and places, nearby stations show prompts, and a mistakenly picked, unprocessed ingredient can be returned to its crate.
+- **Readable business feedback.** Orders are shown with icons and quantities, customer expressions and patience bars signal urgency, and the results screen reports score, revenue and ingredient waste.
 
-| 功能 | 内容 |
+## Features
+
+| Feature | Details |
 | --- | --- |
-| 单人角色控制 | WASD / 方向键移动、加速度与平滑停止、碰撞、冲刺与冷却、跟随镜头 |
-| 食材与加工 | 11 种原料；取放、归还、切菜、自动烹饪、组合装盘；保留中断的加工进度 |
-| 完整料理循环 | 六种菜品、组件与状态校验、出餐口、顾客收餐、同一条传送带回收脏盘、直接洗碗 |
-| 顾客与订单 | 每批一至两人，入座点单后才生成需求，只点本关菜品；订单数量逐份减少 |
-| 时间与挑战 | 每局 300 秒；顾客耐心 90 秒；烧焦预警，第五关包含起火与灭火；后两关含动态通道和移动台 |
-| 评分与经营 | 三星门槛、速度奖励、连击、完美火候奖励与离场扣分；原料价格、营业额、成本、净收益、满意小费和损耗明细 |
-| 界面与保存 | 主菜单、关卡选择、料理手册、音量设置、暂停、单页关卡提示与结算；本机保存成绩和设置 |
-| 画面与声音 | 原创卡通角色、设施与图标、工作动画和粒子；原创关卡配乐、音效、静音，最后 30 秒音乐加速 |
+| Chef control | WASD / arrow keys, acceleration and smooth stopping, collisions, dash with cooldown, follow camera |
+| Ingredients and processing | 11 ingredients; pick up, place, return, chop, auto-cook and combine onto plates; interrupted work keeps its progress |
+| Full cooking loop | Six dishes with component and state validation, a serving window, customers who collect their food, a conveyor belt that returns dirty plates, and direct dish washing |
+| Customers and orders | Parties of one or two; orders appear only after seating, and only dishes from the current level's menu; quantities count down per dish |
+| Time and challenge | 300-second rounds; 90 seconds of customer patience; burn warnings; fire and extinguishing in kitchen 5; the last two kitchens add dynamic corridors and moving counters |
+| Scoring and economy | Three-star thresholds, speed bonus, combo, perfect-heat bonus and walkout penalty; ingredient prices, revenue, cost, net profit, satisfaction tips and waste breakdown |
+| Throwing | Toss held food along your facing direction onto the first empty counter or chopping board within 4.5 tiles, with a landing marker preview |
+| Achievements | Per-run badges for combo, perfect heat, throwing, zero waste, tips and no walkouts, shown on the results screen |
+| Two-player modes | Solo, co-op with an AI partner chef, or local two-player on one keyboard; the camera frames both chefs |
+| Interface and saving | Main menu, level select, cookbook, volume settings, pause, a one-page level briefing and results screen; scores and settings are saved locally |
+| Graphics and sound | Original cartoon characters, stations and icons, work animations and particles; original level music, sound effects, mute, and the music speeds up for the final 30 seconds |
 
-游戏专为单人设计，不包含本地多人、联机、第二玩家或多人按键映射。
+There is no online multiplayer. Local co-op is limited to two chefs on one keyboard (or one chef plus the AI partner).
 
-## 安装方法
+## Installation
 
-### 环境要求
+### Requirements
 
-- Node.js 22.12 或更新版本及 npm；当前 Vite 工具链也支持 20.x 分支中的 20.19 及更新版本。
-- Windows 或 macOS 的现代桌面浏览器，支持 Canvas、Web Audio API 和键盘输入。
-- 推荐使用至少 1000 × 700 的窗口；界面也提供窄窗口布局。当前没有触控或手柄操作映射。
+- Node.js 22.12 or newer with npm. The current Vite toolchain also supports Node 20.19 or newer on the 20.x line.
+- A modern desktop browser on Windows or macOS with Canvas, Web Audio API and keyboard input.
+- A window of at least 1000 × 700 is recommended; the interface also has a narrow-window layout. There is currently no touch or gamepad mapping.
 
-### 安装并启动开发服务
+### Install and start the dev server
 
-下载或复制项目后，在项目根目录（包含 `package.json` 的目录）打开终端，执行：
+After downloading or copying the project, open a terminal in the project root (the folder containing `package.json`) and run:
 
 ```sh
 node --version
@@ -47,206 +52,212 @@ npm install
 npm run dev
 ```
 
-在浏览器打开终端显示的地址，默认是 [http://127.0.0.1:5173/](http://127.0.0.1:5173/)。如果端口被占用，Vite 可能使用其他端口，以实际输出为准。开发服务支持代码热更新；保持终端运行，按 Ctrl+C 可停止。
+Open the address printed in the terminal, which defaults to [http://127.0.0.1:5173/](http://127.0.0.1:5173/). If the port is taken, Vite may pick another one; go by the actual output. The dev server supports hot reload. Keep the terminal running, and press Ctrl+C to stop it.
 
-首次下载 npm 依赖通常需要网络。游戏素材和音乐已包含在项目中，启动后无需外部游戏服务，也不需要安装绘图或音乐制作工具。
+Downloading npm dependencies for the first time usually needs network access. The game assets and music are included in the project, so no external game service is needed once it is running, and you do not have to install any drawing or music-production tools.
 
-### 构建与生产预览
+### Build and production preview
 
 ```sh
 npm run build
 npm run preview
 ```
 
-`npm run build` 先检查 TypeScript，再生成 `dist/`。普通预览默认使用 [http://127.0.0.1:4173/](http://127.0.0.1:4173/)，实际地址以终端输出为准，需保持终端运行。
+`npm run build` type-checks the TypeScript and then produces `dist/`. The standard preview uses [http://127.0.0.1:4173/](http://127.0.0.1:4173/) by default; go by the actual terminal output and keep the terminal running.
 
-如果希望在本机后台启动游戏，可在安装依赖后执行：
+To start the game in the background on your machine, run this after installing dependencies:
 
 ```sh
 npm run play
 ```
 
-此命令构建游戏并启动后台预览，固定地址为 [http://127.0.0.1:5174/](http://127.0.0.1:5174/)。已有游戏服务时会复用；关闭启动命令后服务继续运行，重启电脑后需重新执行。日志位于 `.kitchen-chaos-preview.log`，新启动的服务 PID 会显示在终端中；结束该进程可停止后台服务。
+This builds the game and starts a background preview at the fixed address [http://127.0.0.1:5174/](http://127.0.0.1:5174/). An existing game service is reused. The service keeps running after the launching command is closed, and you need to run the command again after a reboot. The log is `.kitchen-chaos-preview.log`, and the PID of a newly started service is printed in the terminal; end that process to stop the background service.
 
-### 静态部署
+### Static deployment
 
-将构建后的 `dist/` 内容发布到静态网站的根路径 `/` 即可，无需部署服务器端程序。当前资源使用绝对路径；如果部署到 `/game/` 等子目录，需要同步调整构建配置及代码中的资源路径。
+Publish the contents of the built `dist/` folder at the root path `/` of a static website. No server-side program is required. Assets currently use absolute paths, so deploying to a subdirectory such as `/game/` requires adjusting the build configuration and the asset paths in the code.
 
-请通过 HTTP / HTTPS 服务访问，不要双击 `index.html` 以 `file://` 方式运行。
+Serve it over HTTP / HTTPS. Do not open `index.html` by double-clicking it, because `file://` is not supported.
 
-## 使用方法
+## How to play
 
-### 开始一局游戏
+### Starting a round
 
-1. 打开游戏页面，选择“开始开餐”或“选择关卡”。已有进度时，主按钮显示“继续开餐”。
-2. 阅读本关提示、菜单和星级目标。准备页不消耗回合时间。
-3. 选择“准备好了，开餐！”开始五分钟营业。
-4. 等顾客入座点单，对照左上角的菜品图标、食材加工图标和待做数量制作料理。
-5. 把装好的菜送到出餐口，料理通过传送带送达顾客后获得奖励。回合结束后查看成绩和经营结算。
+1. Open the game page and choose "开始开餐" (start service) or "选择关卡" (select a kitchen). If you already have progress, the main button reads "继续开餐" (continue service).
+2. Read the level briefing, the menu and the star goals. The briefing screen does not use up round time.
+3. Choose "准备好了，开餐！" (ready, open the kitchen!) to start the five-minute shift. In the top-right corner of the briefing you can switch between solo, AI partner and local two-player.
+4. Wait for customers to be seated and order, then cook using the dish icons, ingredient-processing icons and pending quantities in the top-left corner.
+5. Deliver finished dishes to the serving window. You are rewarded once the conveyor belt delivers the dish to the customer. When the round ends, review your score and business summary.
 
-菜单可用方向键 / WASD 或 Tab 选择，J / Enter 确认。声音设置中的左右方向键可调整当前音量滑块。
+Menus can be navigated with the arrow keys / WASD or Tab, and confirmed with J / Enter. On the sound settings screen, the left and right arrow keys adjust the current volume slider.
 
-### 键盘操作
+### Keyboard controls
 
-| 按键 | 动作 |
+| Key | Action |
 | --- | --- |
-| WASD / 方向键 | 移动 |
-| J | 拿取、放置、归还原料、添加食材、装盘、上菜 |
-| 按住 Space | 切菜、洗碗；携带灭火器时灭火 |
-| K | 冲刺，冷却 1.2 秒 |
-| 双人模式 | 简报页右上角点击切换：单人 / 双人（AI 搭档）/ 双人（真人）。真人模式玩家 1 用 WASD + J K Space L，玩家 2 用方向键 + . / , ; 。双人成绩不计入存档星级 |
-| L | 投掷手中食材：沿面向方向飞向 4.5 格内第一个空的工作台或切菜板（盘子不能扔） |
-| P / Esc | 游戏中暂停 / 继续 |
-| R | 打开 / 关闭料理手册，游玩期间查看会暂停游戏 |
-| M | 切换静音 |
+| WASD / arrow keys | Move |
+| J | Pick up, place, return an ingredient, add food to a plate, plate food, serve |
+| Hold Space | Chop, wash dishes; extinguish fires while holding an extinguisher |
+| K | Dash, 1.2-second cooldown |
+| L | Throw held food along your facing direction onto the first empty counter or chopping board within 4.5 tiles (plates cannot be thrown) |
+| P / Esc | Pause / resume during play |
+| R | Open / close the cookbook; opening it during play pauses the game |
+| M | Toggle mute |
 
-一次只能携带一个物品。金色边框标识当前交互设施，底部提示说明可执行的动作。切菜和洗碗需要空手；加工可中断并保留进度。暂停、窗口失焦或切换浏览器标签会冻结顾客、炉灶、传送带和回合计时。
+**Two-player modes.** Click the mode button in the top-right of the level briefing to cycle through solo, two-player with an AI partner, and two-player with a human partner. Two-player runs count as practice and never change saved stars.
 
-### 制作第一份沙拉
+- **AI partner:** an orange-aproned second chef that cooks, serves and washes dishes on its own, using the same rules as you. It avoids dishes you are already assembling.
+- **Local two-player:** player 1 uses WASD + J, Space, K and L. Player 2 uses the arrow keys + `.` to pick up and place, `/` (hold) to work, `,` to dash and `;` to throw.
 
-1. 到生菜箱按 J 拿取，再到切菜板按 J 放下，空手按住 Space 两秒切好。
-2. 按 J 取走生菜，放到空工作台。到盘架拿干净盘子，回到生菜前按 J 装盘，再将盘子放回工作台。
-3. 同样切好番茄，手持番茄对工作台上的盘子按 J 添加。空手按 J 拿起完成的沙拉。
-4. 有沙拉订单时，拿盘到出餐口按 J 上菜，等待传送带送达顾客。
-5. 顾客吃完后，脏盘会沿同一条传送带进入左上角末端水槽。空手靠近，按住 Space 两秒洗净，干净盘自动回到盘架。
+You can carry one item at a time. A golden outline marks the station you are interacting with, and the bottom prompt explains the available action. Chopping and washing need empty hands; processing can be interrupted and keeps its progress. Pausing, losing window focus or switching browser tabs freezes customers, stoves, the conveyor belt and the round timer.
 
-也可以先把空盘放到工作台，再逐一添加食材。手持盘子对切菜板上的切好食材或锅里的熟食按 J，可以直接装盘。
+### Making your first salad
 
-### 误拿、火候与盘子管理
+1. Go to the lettuce crate and press J to take one, then press J at the chopping board to put it down. With empty hands, hold Space for two seconds to chop it.
+2. Press J to take the chopped lettuce and put it on an empty counter. Take a clean plate from the plate rack, return to the lettuce and press J to plate it, then put the plate back on the counter.
+3. Chop a tomato in the same way, and with the tomato in hand press J facing the plate on the counter to add it. With empty hands, press J to pick up the finished salad.
+4. When there is a salad order, carry the plate to the serving window and press J to serve, then wait for the conveyor belt to deliver it to the customer.
+5. After the customer finishes eating, the dirty plate travels along the same belt to the sink at the end of the top-left corner. Stand next to it with empty hands and hold Space for two seconds to wash it; the clean plate returns to the plate rack automatically.
 
-- **拿错原料**：未加工、没有加工进度的单份原料，可到对应食材箱按 J 放回；归还不计损耗或原料成本。已经切过、煮过、组合或装盘的食物可暂存工作台，或拿到垃圾桶丢弃。清空有食物的盘子时会保留盘子。
-- **管理火候**：食材放入炉灶后自动烹饪。完成后有 12 秒安全期，再进入 5 秒烧焦预警，预警期间仍可装盘。**完美火候**：烹饪完成后 4 秒内，手持干净盘子直接从炉灶装盘，该盘菜送达客人时每个这样装盘的熟食额外加 20 分（提示栏会显示“完美火候”）；先取出再装盘、或超过 4 秒都不计。烧焦食物不能上菜；第五关继续加热 8 秒会起火，拿灭火器在起火炉灶旁按住 Space 三秒灭火。
-- **循环盘子**：第一关有三只盘，第二关四只，后三关五只。顾客用餐 8 秒后把脏盘放回传送带；水槽计数包含正在清洗的一只。持续按住 Space 可以逐只洗完整个队列，松开保留进度。
+You can also put an empty plate on a counter first and add ingredients one by one. With a plate in hand, press J facing chopped food on a chopping board or cooked food in a pot to plate it directly.
 
-### 阅读订单与结算
+### Mistakes, heat and plate management
 
-顾客从点单开始拥有 **90 秒耐心**，收到料理前持续减少，送餐途中也会消耗。每张菜品卡下的进度条显示该菜剩余待上菜顾客中最少的耐心：绿 → 黄 → 红；顾客头顶的轻松、着急、生气表情提供相同提示。画面不额外显示等待秒数，用餐也不显示进度条。
+- **Picked the wrong ingredient:** a single unprocessed ingredient with no processing progress can be returned to its crate with J. Returns cost no waste or ingredient cost. Food that has been chopped, cooked, combined or plated can be parked on a counter or thrown in the trash can. Emptying a plate that holds food keeps the plate.
+- **Managing heat:** food placed on a stove cooks automatically. When done, it has a 12-second safe window followed by a 5-second burn warning, during which you can still plate it. **Perfect heat:** if you plate straight from the stove with a clean plate within 4 seconds of finishing, every food plated this way earns an extra 20 points when the dish reaches the customer (the prompt bar shows "完美火候", perfect heat). Taking the food out first and plating it later, or waiting more than 4 seconds, does not count. Burnt food cannot be served. In kitchen 5, continued heating for 8 seconds sets the stove on fire; grab the extinguisher and hold Space next to the burning stove for three seconds.
+- **Recycling plates:** kitchen 1 has three plates, kitchen 2 has four, and the last three have five. Customers put the dirty plate back on the belt 8 seconds after they start eating. The sink counter includes the plate currently being washed. Keep holding Space to wash the whole queue one by one; releasing it keeps your progress.
 
-同一菜品的数字表示待做份数，提交一份后减一，全部提交后卡片移除。奖励、完成数量与营业额在料理实际送达后增加。耐心耗尽的顾客离场，扣 30 分并打断连击；未及时送达的料理不获得奖励，食材计入损耗。
+### Reading orders and the results screen
 
-结算同时显示得分、星级、完成数量、离场人数、最高连击，以及营业额、原料总成本、净收益和损耗明细。丢弃、烧毁清除、超时送餐及收工未售出的食材均按单价计入损耗；已收到并正在用餐的料理不计损耗。
+A customer has **90 seconds of patience** from the moment they order. It keeps draining until the food is received, including while the food is on its way. The progress bar under each dish card shows the lowest remaining patience among the customers still waiting for that dish: green, then yellow, then red. Customer expressions (relaxed, anxious, angry) give the same hint. The screen does not show a countdown in seconds, and eating has no progress bar.
 
-## 菜谱、关卡与价格
+The number on a dish card is the quantity still to make; it drops by one for each dish submitted, and the card disappears once all are submitted. Rewards, completed counts and revenue increase only after the dish is actually delivered. A customer who runs out of patience leaves, costing 30 points and breaking the combo. A dish that arrives too late earns no reward, and its ingredients count as waste.
 
-### 六种可制作菜品
+The results screen shows score, stars, completed dishes, walkouts, best combo, perfect-heat and throw counts, achievement badges, revenue, total ingredient cost, net profit and a waste breakdown. Discarded food, burnt food that was cleared, dishes delivered too late and ingredients left unsold at closing all count as waste at unit price. A dish that has been received and is being eaten does not count as waste.
 
-| 菜品 | 制作要求 | 基础分 | 原料成本 / 售价（金币） |
+## Recipes, levels and prices
+
+### The six dishes
+
+| Dish | Requirements | Base score | Ingredient cost / price (coins) |
 | --- | --- | ---: | ---: |
-| 蔬菜沙拉 | 生菜切 2 秒 + 番茄切 2 秒 | 100 | 4 / 8 |
-| 番茄汤 | 番茄切 2 秒 + 洋葱切 3 秒，依次放入同一锅煮 10 秒 | 150 | 4 / 8 |
-| 经典汉堡 | 面包 + 牛肉煎 6 秒 + 生菜切 2 秒 | 160 | 9 / 18 |
-| 芝士汉堡 | 面包 + 牛肉煎 6 秒 + 奶酪 | 150 | 10 / 20 |
-| 鸡肉饭 | 米饭煮 8 秒 + 鸡肉煎 7 秒 | 180 | 6 / 12 |
-| 蔬菜意面 | 面条煮 7 秒 + 番茄切 2 秒 + 胡萝卜切 3 秒 | 170 | 6 / 12 |
+| Garden salad (蔬菜沙拉) | Lettuce, chopped 2 s + tomato, chopped 2 s | 100 | 4 / 8 |
+| Tomato soup (番茄汤) | Tomato, chopped 2 s + onion, chopped 3 s, added one after the other to the same pot and boiled 10 s | 150 | 4 / 8 |
+| Classic burger (经典汉堡) | Bread + beef, fried 6 s + lettuce, chopped 2 s | 160 | 9 / 18 |
+| Cheeseburger (芝士汉堡) | Bread + beef, fried 6 s + cheese | 150 | 10 / 20 |
+| Chicken rice (鸡肉饭) | Rice, boiled 8 s + chicken, fried 7 s | 180 | 6 / 12 |
+| Veggie pasta (蔬菜意面) | Noodles, boiled 7 s + tomato, chopped 2 s + carrot, chopped 3 s | 170 | 6 / 12 |
 
-面包和奶酪可直接使用，其他组件必须满足加工状态。番茄汤在两种切好的原料齐全后自动开煮。系统会拒绝重复、状态不对或不符合本关菜谱的组合。土豆是第五关的可切练习食材，不属于这六道订单菜。
+Bread and cheese can be used as-is; every other component must be in the right processing state. Tomato soup starts cooking automatically once both chopped ingredients are in the pot. The game rejects duplicate, wrongly processed or off-menu combinations. Potato is a choppable practice ingredient in kitchen 5 and is not part of the six ordered dishes.
 
-### 五个厨房
+### The five kitchens
 
-每关 300 秒，获得一星即可解锁下一关。顾客只能点当前关卡菜单中的菜品。
+Each level lasts 300 seconds, and earning one star unlocks the next. Customers can only order dishes from the current level's menu.
 
-| 关卡 | 菜单与新增挑战 | 一星 / 二星 / 三星分数 |
+| Kitchen | Menu and new challenge | 1 / 2 / 3-star score |
 | --- | --- | --- |
-| 阳光厨房 | 沙拉；学习切菜、装盘、上菜与洗碗 | 300 / 600 / 900 |
-| 汉堡餐厅 | 经典汉堡、芝士汉堡；双炉灶与烧焦 | 400 / 750 / 1100 |
-| 繁忙食堂 | 沙拉、两种汉堡、鸡肉饭；三炉灶与多任务安排 | 450 / 850 / 1250 |
-| 移动厨房 | 沙拉、番茄汤、经典汉堡、蔬菜意面；移动台与交替通道 | 450 / 850 / 1050 |
-| 终极厨房 | 全部六道菜与 11 种原料；四炉灶、动态通道、起火与灭火 | 500 / 950 / 1250 |
+| Sunny Side (阳光厨房) | Salad; learn chopping, plating, serving and washing | 300 / 600 / 900 |
+| Burger Club (汉堡餐厅) | Classic burger, cheeseburger; two stoves and burning | 400 / 750 / 1100 |
+| Lunch Rush (繁忙食堂) | Salad, both burgers, chicken rice; three stoves and multitasking | 450 / 850 / 1250 |
+| On the Road (移动厨房) | Salad, tomato soup, classic burger, veggie pasta; moving counters and alternating corridors | 450 / 850 / 1050 |
+| Grand Finale (终极厨房) | All six dishes and 11 ingredients; four stoves, dynamic corridors, fire and extinguishing | 500 / 950 / 1250 |
 
-### 原料单价与收益
+### Ingredient prices and profit
 
-| 原料 | 每份成本（金币） |
+| Ingredient | Cost per portion (coins) |
 | --- | ---: |
-| 番茄、生菜、洋葱、胡萝卜、土豆 | 各 2 |
-| 米饭、面包、面条 | 各 2 |
-| 牛肉 | 5 |
-| 鸡肉 | 4 |
-| 奶酪 | 3 |
+| Tomato, lettuce, onion, carrot, potato | 2 each |
+| Rice, bread, noodles | 2 each |
+| Beef | 5 |
+| Chicken | 4 |
+| Cheese | 3 |
 
-每道菜售价为原料成本的两倍，即原料成本占售价的 **50%**。
+Each dish sells for twice its ingredient cost, so ingredients make up **50%** of the selling price.
 
 ```text
-营业额 = 实际送达料理的售价之和
-原料总成本 = 已售料理原料成本 + 损耗成本
-净收益 = 营业额 - 原料总成本
-满意小费 = 顾客耐心剩余 2/3 以上收到菜时，菜品售价的 25%（四舍五入，至少 1 金币）；单独统计，不计入营业额和净收益
+Revenue          = sum of the selling prices of dishes actually delivered
+Total ingredient cost = cost of ingredients in sold dishes + waste cost
+Net profit       = revenue - total ingredient cost
+Satisfaction tip = 25% of the dish price (rounded, at least 1 coin) when the customer
+                   still has more than 2/3 of their patience on receiving the food;
+                   counted separately and not included in revenue or net profit
 ```
 
-金币反映经营结果，得分和星级反映挑战成绩，两者分别计算。
+Coins reflect business results, while score and stars reflect challenge results; the two are calculated separately.
 
-## 存档与常见问题
+## Saving and troubleshooting
 
-最高分、星级、解锁状态、静音和音量自动保存在浏览器 `localStorage`，键名为 `kitchen-chaos-v1`。未结束的一局不会保存。更换浏览器、地址或端口会使用不同存档，例如 5173 开发服务与 5174 后台预览的进度互不共享；清除网站数据也会清除进度。
+Best scores, stars, unlock state, mute and volume are saved automatically in the browser's `localStorage` under the key `kitchen-chaos-v1`. A round that has not finished is not saved. A different browser, address or port uses a separate save: for example the 5173 dev server and the 5174 background preview do not share progress, and clearing site data also clears progress.
 
-| 问题 | 处理方法 |
+| Problem | What to do |
 | --- | --- |
-| 网页打不开 | 确认命令启动成功，并打开终端实际显示的地址；前台服务需保持运行。后台启动失败时查看 `.kitchen-chaos-preview.log` |
-| 5174 端口被占用 | 后台脚本会拒绝复用其他应用的服务；释放端口，或用前台预览指定空闲端口：`npm run preview -- --port 5175` |
-| 没有声音 | 先在页面内按键或点击以启用浏览器音频，再检查静音及声音设置；暂停期间配乐也会暂停 |
-| 按键没有反应 | 先让游戏页面获得焦点，确认当前不是暂停或准备界面，并检查底部操作提示 |
-| 切菜 / 洗碗没有开始 | 腾出双手，靠近正确设施并按住 Space；切菜板上需要有可切原料，水槽需要有脏盘 |
-| 无法装盘或上菜 | 对照 R 料理手册检查加工状态、组件数量和本关菜单，并确认仍有对应订单 |
-| 换启动方式后没有旧进度 | 确认浏览器及访问地址、端口相同；存档按网站来源分别保存 |
+| The page does not open | Make sure the command started successfully and open the address the terminal actually shows; a foreground service must keep running. If the background start fails, check `.kitchen-chaos-preview.log` |
+| Port 5174 is in use | The background script refuses to reuse another app's service. Free the port, or use a foreground preview on a free port: `npm run preview -- --port 5175` |
+| No sound | Press a key or click on the page first to enable browser audio, then check mute and the sound settings; the music also pauses while the game is paused |
+| Keys do nothing | Give the game page focus, make sure you are not on the pause or briefing screen, and check the controls hint at the bottom |
+| Chopping or washing will not start | Free both hands, stand next to the right station and hold Space; the chopping board needs a choppable ingredient and the sink needs a dirty plate |
+| Cannot plate or serve | Check processing state, component count and the level's menu against the cookbook (R), and make sure a matching order still exists |
+| Old progress is missing after changing how you start the game | Make sure the browser, address and port are the same; saves are kept per website origin |
 
-## 开发、检查与项目结构
+## Development, checks and project layout
 
-| 命令 | 用途 |
+| Command | Purpose |
 | --- | --- |
-| `npm run dev` | 启动开发服务 |
-| `npm run typecheck` | 检查 TypeScript 类型 |
-| `npm test` | 运行 Vitest 逻辑测试，包括菜谱、餐厅、成本、角色与单人路线 |
-| `npm run build` | 类型检查并构建生产文件 |
-| `npm run preview` | 前台预览 `dist/` |
-| `npm run play` | 构建并启动 5174 后台预览 |
-| `npm run test:e2e` | 运行 Playwright 浏览器测试 |
-| `npm run clean:test` | 删除截图、报告和临时测试输出，保留测试源码与必要夹具 |
+| `npm run dev` | Start the dev server |
+| `npm run typecheck` | Type-check the TypeScript |
+| `npm test` | Run the Vitest logic tests, including recipes, restaurant, costs, characters, the AI partner and the solo route |
+| `npm run build` | Type-check and build production files |
+| `npm run preview` | Preview `dist/` in the foreground |
+| `npm run play` | Build and start the background preview on port 5174 |
+| `npm run test:e2e` | Run the Playwright browser tests |
+| `npm run clean:test` | Delete screenshots, reports and temporary test output, keeping test sources and required fixtures |
 
-首次运行浏览器测试前，安装 Chromium：
+Before running the browser tests for the first time, install Chromium:
 
 ```sh
 npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright 会在需要时启动 5173 开发服务。完整流程包括真实键盘操作、关卡流程和独立 UI 布局检查，耗时较长。定向场景优先使用本次测试在 `artifacts/` 生成的真实记录；没有新记录时，使用 [tests/fixtures/](tests/fixtures/README.md) 中不含账号凭据的历史游戏记录。历史夹具不代表当前版本的新通关成绩。
+Playwright starts the 5173 dev server when needed. The full run includes real keyboard play, level flows and standalone UI layout checks, and takes a while. For targeted scenarios, prefer the real records this run generates in `artifacts/`; without fresh records, use the historical game records without account credentials in [tests/fixtures/](tests/fixtures/README.md). The historical fixtures do not represent new clear results from the current version.
 
-截图与记录保存在 `artifacts/`，报告可用 `npx playwright show-report` 查看。完成测试后运行 `npm run clean:test` 清空输出。`artifacts/`、`playwright-report/`、`test-results/`、本地日志和环境配置均已列入忽略规则；发布源码时仍需排除这些目录与 `node_modules/`。已完成的验证、日期、历史版本差异与已知限制见 [TESTING.md](TESTING.md)。
+Screenshots and records are saved in `artifacts/`, and reports can be viewed with `npx playwright show-report`. After testing, run `npm run clean:test` to clear the output. `artifacts/`, `playwright-report/`, `test-results/`, local logs and environment configuration are all in the ignore rules; when publishing the source, still exclude those folders and `node_modules/`. Completed verification, dates, differences between versions and known limitations are in [TESTING.md](TESTING.md).
 
-生产检查时，先启动 5174 预览，再在另一终端执行：
+For a production check, start the 5174 preview first and then run this in another terminal:
 
 ```sh
 node scripts/check_production.mjs
 ```
 
-可执行 `node scripts/check_production.mjs 5` 检查第五关生产包；优先使用本次生成的解锁记录，没有新记录时使用历史测试夹具。
+Run `node scripts/check_production.mjs 5` to check the kitchen 5 production bundle; prefer the unlock record generated by the current run, and fall back to the historical test fixture if there is none.
 
 ```text
 src/
-  main.ts          游戏入口与样式
-  game/            固定步长模拟、输入、音频、存档
-  cooking/         数据驱动菜谱、加工与组合校验
-  restaurant/      顾客点单、耐心、送餐、用餐与盘子回传
-  levels/          五关地图、设施、障碍与难度数据
-  rendering/       Canvas 美术、角色动画、镜头与粒子
-  ui/              菜单、提示、HUD、料理手册与结算
-public/            随游戏发布的角色图集、封面与音轨
-assets/            原创素材提示词、MIDI / WAV 母带与音源许可
-scripts/           音乐生成、后台预览与生产检查脚本
-tests/             逻辑与浏览器测试
+  main.ts          game entry and styles
+  game/            fixed-step simulation, input, audio, saving, AI partner chef
+  cooking/         data-driven recipes, processing and combination validation
+  restaurant/      customer ordering, patience, delivery, eating and plate return
+  levels/          the five maps, stations, obstacles and difficulty data
+  rendering/       Canvas art, character animation, camera and particles
+  ui/              menus, prompts, HUD, cookbook and results
+public/            character atlas, cover and audio tracks shipped with the game
+assets/            original art prompts, MIDI / WAV masters and sound-font licence
+scripts/           music generation, background preview and production-check scripts
+tests/             logic and browser tests
 ```
 
-渲染使用 `requestAnimationFrame`，逻辑采用固定 60 Hz 时间步长。模拟层不依赖 DOM，方便单独验证规则；运行时不依赖游戏引擎或后台服务。
+Rendering uses `requestAnimationFrame`, and the logic runs on a fixed 60 Hz time step. The simulation layer does not depend on the DOM, so the rules can be verified on their own; at runtime there is no dependency on a game engine or a backend service.
 
-## 美术与音乐资源
+## Art and music assets
 
-厨师头部图集与菜单封面由 AI 生成，提示词见 [assets/art/prompts.md](assets/art/prompts.md)；身体、食材、厨房设施、动作和反馈主要由 Canvas 绘制。菜单标题使用原创 SVG，游戏不使用原作角色、美术或原声录音。
+The chef head atlas and the menu cover are AI-generated, with the prompts in [assets/art/prompts.md](assets/art/prompts.md). The body, ingredients, kitchen stations, actions and feedback are mostly drawn on the Canvas. The menu title is an original SVG, and the game does not use characters, art or soundtrack recordings from any existing work.
 
-已生成的原创配乐通过 Web Audio API 播放，操作音效在游戏中合成。`assets/music/` 保存 MIDI、WAV 母带及音源许可，`public/audio/` 保存游戏使用的 Ogg / MP3 文件。
+The generated original music is played through the Web Audio API, and the action sound effects are synthesised in the game. `assets/music/` keeps the MIDI, the WAV masters and the sound-font licence, and `public/audio/` keeps the Ogg / MP3 files the game uses.
 
-仅在重新生成配乐时，需要 Python 的 numpy、scipy、soundfile，FluidSynth、LAME 和另行取得的 GeneralUser GS SoundFont：
+Only when regenerating the music do you need Python with numpy, scipy and soundfile, plus FluidSynth, LAME and a separately obtained GeneralUser GS SoundFont:
 
 ```sh
 python3 scripts/create_music.py --soundfont /path/to/GeneralUser-GS.sf2
 ```
 
-GeneralUser GS 音源作者为 S. Christian Collins，许可见 [assets/music/GeneralUser-GS-LICENSE.txt](assets/music/GeneralUser-GS-LICENSE.txt)。运行游戏无需安装这些音乐制作工具。
+The GeneralUser GS sound font is by S. Christian Collins; see [assets/music/GeneralUser-GS-LICENSE.txt](assets/music/GeneralUser-GS-LICENSE.txt) for its licence. None of these music-production tools is needed to run the game.
