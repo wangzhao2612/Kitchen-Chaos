@@ -119,6 +119,7 @@ export class ChefAI {
         yield* this.interact(crate);
         if (this.me.held) {
           this.goofs++;
+          this.sim.events.push({ kind: 'place', x: this.me.x, y: this.me.y - 18, text: '哎呀！' });
           yield* this.wait(.7);
           yield* this.interact(crate); // putting an untouched ingredient back costs nothing
           if (this.me.held) throw new Error('Could not return the wrong ingredient');

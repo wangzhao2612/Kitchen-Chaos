@@ -85,3 +85,12 @@ it('a clumsy AI grabs wrong ingredients, puts them back at no cost, and still co
   // Only the dish still being assembled when the round ends is wasted; the goofs themselves cost nothing.
   expect(sim.result().wasteCost).toBeLessThanOrEqual(20);
 });
+
+it('a goof shows an "Oops" bubble above the partner', () => {
+  const sim = new Simulation(LEVELS[0]), ai = new ChefAI(1);
+  sim.addPartner(ai.brain);
+  let bubbles = 0;
+  for (let i = 0; i < 120 * 60 && !sim.finished && !bubbles; i++) { sim.update(1 / 60, idle); bubbles += sim.events.filter(e => e.text === '哎呀！').length; }
+  expect(bubbles).toBeGreaterThan(0);
+  expect(ai.goofs).toBeGreaterThan(0);
+});
